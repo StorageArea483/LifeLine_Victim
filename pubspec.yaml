@@ -1,0 +1,57 @@
+name: life_line
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.7.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cloud_firestore: ^6.0.3
+  firebase_core: ^4.2.0
+  mailer: ^6.1.0
+  shared_preferences: ^2.5.3
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  
+  #For OpenStreetMap
+  latlong2: ^0.9.1
+  flutter_map: ^8.2.2
+  flutter_map_location_marker: ^10.1.0
+  location: ^8.0.1
+  http: ^1.6.0
+  flutter_polyline_points: ^3.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_logo.png"
+
+flutter:
+  uses-material-design: true
+
+  # Assets
+  assets:
+    - assets/images/ # include all images in this folder
+    - assets/fonts/ # include all fonts in this folder
+
+  # Fonts
+  fonts:
+    - family: SFPro
+      fonts:
+        - asset: assets/fonts/SFPRODISPLAYREGULAR.OTF
+          weight: 400
+        - asset: assets/fonts/SFPRODISPLAYMEDIUM.OTF
+          weight: 500
+        - asset: assets/fonts/SFPRODISPLAYSEMIBOLDITALIC.OTF
+          weight: 600
+        - asset: assets/fonts/SFPRODISPLAYBOLD.OTF
+          weight: 700
