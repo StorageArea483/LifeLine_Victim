@@ -1,46 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:life_line/widgets/features/victim_authentication/login/victim_login.dart';
-import 'package:life_line/widgets/global/role_select_screen.dart';
-import 'package:life_line/widgets/constants/constants.dart';
+import 'package:life_line/widgets/global/victim_entry_screen.dart';
 import 'package:life_line/widgets/features/victim_authentication/sign_up/victim_signup.dart';
-import 'package:life_line/services/functions/transitions_in_pages.dart';
-import 'package:life_line/utils/styles.dart';
+import 'package:life_line/styles/styles.dart';
 
-class LoginSignup extends StatelessWidget {
-  const LoginSignup({super.key});
+class WelcomePage extends StatelessWidget {
+  const WelcomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.softBackground,
+      appBar: AppBar(
+        backgroundColor: AppColors.softBackground,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: AppColors.darkCharcoal,
+            size: 24,
+          ),
+          onPressed:
+              () => Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => const VictimEntryScreen(),
+                ),
+              ),
+        ),
+      ),
       body: Container(
         decoration: AppContainers.pageContainer,
         child: SafeArea(
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Back button
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back_ios,
-                          color: AppColors.darkCharcoal,
-                          size: 24,
-                        ),
-                        onPressed:
-                            () => pageTransition(
-                              context,
-                              const RoleSelectScreen(),
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
                 // Community Image - simplified, no shadow
                 Container(
                   width: 280,
@@ -101,9 +94,10 @@ class LoginSignup extends StatelessWidget {
                             child: ElevatedButton(
                               style: AppButtons.submit,
                               onPressed:
-                                  () => pageTransition(
-                                    context,
-                                    const VictimLogin(),
+                                  () => Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                      builder: (context) => const VictimLogin(),
+                                    ),
                                   ),
                               child: const Text('Login'),
                             ),
@@ -117,9 +111,11 @@ class LoginSignup extends StatelessWidget {
                             child: ElevatedButton(
                               style: AppButtons.submit,
                               onPressed:
-                                  () => pageTransition(
-                                    context,
-                                    const VictimSignup(),
+                                  () => Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => const VictimSignup(),
+                                    ),
                                   ),
                               child: const Text('Sign Up'),
                             ),

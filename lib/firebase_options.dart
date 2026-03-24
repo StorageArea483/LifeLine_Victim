@@ -71,4 +71,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'life-line-victim-27aaa.firebasestorage.app',
     iosBundleId: 'com.example.lifeLine',
   );
+
 }

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:life_line/services/functions/transitions_in_pages.dart';
-import 'package:life_line/widgets/constants/constants.dart';
-import 'package:life_line/utils/styles.dart';
+import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/features/victim_authentication/sign_up/victim_signup.dart';
 
 class VictimBlocked extends StatelessWidget {
@@ -94,7 +92,11 @@ class VictimBlocked extends StatelessWidget {
                     child: ElevatedButton(
                       style: AppButtons.submit,
                       onPressed:
-                          () => pageTransition(context, const VictimSignup()),
+                          () => Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) => const VictimSignup(),
+                            ),
+                          ),
                       child: const Text('Return to SignUp page'),
                     ),
                   ),

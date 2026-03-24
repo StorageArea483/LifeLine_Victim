@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:life_line/widgets/global/verify_email_otp.dart';
-import 'package:life_line/widgets/features/victim_authentication/sign_up/login_signup.dart';
-import 'package:life_line/widgets/constants/constants.dart';
-import 'package:life_line/services/functions/transitions_in_pages.dart';
-import 'package:life_line/utils/styles.dart';
+import 'package:life_line/widgets/features/victim_authentication/sign_up/welcome_page.dart';
+import 'package:life_line/styles/styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -85,16 +83,18 @@ class _VictimSignupState extends State<VictimSignup> {
       await prefs.setString('userEmail', email);
 
       if (mounted) {
-        pageTransition(
-          context,
-          VerifyEmailOtp(
-            firstName: _firstNameController.text.trim(),
-            lastName: _lastNameController.text.trim(),
-            emailAddress: email,
-            password: _passwordController.text.trim(),
-            phoneNumber: phone,
-            isSignUp: true,
-            isLogin: false,
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder:
+                (context) => VerifyEmailOtp(
+                  firstName: _firstNameController.text.trim(),
+                  lastName: _lastNameController.text.trim(),
+                  emailAddress: email,
+                  password: _passwordController.text.trim(),
+                  phoneNumber: phone,
+                  isSignUp: true,
+                  isLogin: false,
+                ),
           ),
         );
       }
@@ -132,7 +132,11 @@ class _VictimSignupState extends State<VictimSignup> {
                           size: 24,
                         ),
                         onPressed:
-                            () => pageTransition(context, const LoginSignup()),
+                            () => Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => const WelcomePage(),
+                              ),
+                            ),
                       ),
                     ],
                   ),

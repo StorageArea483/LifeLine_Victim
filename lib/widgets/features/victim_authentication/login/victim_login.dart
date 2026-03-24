@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:life_line/widgets/constants/constants.dart';
-import 'package:life_line/utils/styles.dart';
+import 'package:life_line/styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:life_line/widgets/features/victim_authentication/login/password_forgot.dart';
-import 'package:life_line/widgets/features/victim_authentication/sign_up/login_signup.dart';
+import 'package:life_line/widgets/features/victim_authentication/sign_up/welcome_page.dart';
 import 'package:life_line/widgets/features/victim_dashboard/victim_page.dart';
 import 'package:life_line/widgets/global/victim_blocked.dart';
-import 'package:life_line/services/functions/transitions_in_pages.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class VictimLogin extends StatefulWidget {
@@ -56,9 +54,15 @@ class _VictimLoginState extends State<VictimLogin> {
 
           if (mounted) {
             if (isBlocked) {
-              pageTransition(context, VictimBlocked(userEmail: email));
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => VictimBlocked(userEmail: email),
+                ),
+              );
             } else {
-              pageTransition(context, const VictimPage());
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const VictimPage()),
+              );
             }
           }
         } else {
@@ -117,7 +121,11 @@ class _VictimLoginState extends State<VictimLogin> {
                           size: 24,
                         ),
                         onPressed:
-                            () => pageTransition(context, const LoginSignup()),
+                            () => Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => const WelcomePage(),
+                              ),
+                            ),
                       ),
                       const Spacer(),
                       const Text('Login', style: AppText.appHeader),
@@ -179,9 +187,10 @@ class _VictimLoginState extends State<VictimLogin> {
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
                           onPressed:
-                              () => pageTransition(
-                                context,
-                                const PasswordForgot(),
+                              () => Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (context) => const PasswordForgot(),
+                                ),
                               ),
                           child: const Text(
                             'Forgot Password?',

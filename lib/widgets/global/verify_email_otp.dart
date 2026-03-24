@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:life_line/services/functions/transitions_in_pages.dart';
-import 'package:life_line/utils/styles.dart';
+import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/features/victim_authentication/sign_up/victim_signup.dart';
 import 'package:life_line/widgets/features/victim_dashboard/victim_page.dart';
 import 'package:life_line/widgets/features/victim_authentication/login/change_password.dart';
@@ -72,7 +71,7 @@ class _VerifyEmailOtpState extends State<VerifyEmailOtp> {
 
   Message _createOtpMessage(String to, String code) {
     final msg = Message();
-    msg.from = Address(_senderEmail, 'LifeLine');
+    msg.from = const Address(_senderEmail, 'LifeLine');
     msg.recipients = [to];
     msg.subject = 'Your LifeLine verification code';
     msg.text = 'Your verification code is: $code\nThis code will expire soon.';
@@ -156,15 +155,19 @@ class _VerifyEmailOtpState extends State<VerifyEmailOtp> {
 
         // Navigate to VictimPage
         // ignore: use_build_context_synchronously
-        pageTransition(context, const VictimPage());
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const VictimPage()),
+        );
       } else if (!widget.isSignUp && widget.isLogin) {
         setState(() => _isLoading = false);
 
         // User is resetting password - navigate to ChangePassword
         // ignore: use_build_context_synchronously
-        pageTransition(
-          context,
-          ChangePassword(emailAddress: widget.emailAddress),
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder:
+                (context) => ChangePassword(emailAddress: widget.emailAddress),
+          ),
         );
       }
     } catch (e) {
@@ -232,7 +235,12 @@ class _VerifyEmailOtpState extends State<VerifyEmailOtp> {
                   color: Colors.black,
                   size: 24,
                 ),
-                onPressed: () => pageTransition(context, VictimSignup()),
+                onPressed:
+                    () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => const VictimSignup(),
+                      ),
+                    ),
               ),
 
               const SizedBox(height: AppSpacing.xl),

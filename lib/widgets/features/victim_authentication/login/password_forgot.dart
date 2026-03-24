@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:life_line/services/functions/transitions_in_pages.dart';
-import 'package:life_line/utils/styles.dart';
-import 'package:life_line/widgets/constants/constants.dart';
+import 'package:life_line/styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:life_line/widgets/features/victim_authentication/login/victim_login.dart';
 import 'package:life_line/widgets/global/verify_email_otp.dart';
@@ -41,9 +39,15 @@ class _PasswordForgotState extends State<PasswordForgot> {
 
       if (query.docs.isNotEmpty) {
         if (mounted) {
-          pageTransition(
-            context,
-            VerifyEmailOtp(emailAddress: email, isSignUp: false, isLogin: true),
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder:
+                  (context) => VerifyEmailOtp(
+                    emailAddress: email,
+                    isSignUp: false,
+                    isLogin: true,
+                  ),
+            ),
           );
         }
       } else {
@@ -94,7 +98,11 @@ class _PasswordForgotState extends State<PasswordForgot> {
                           size: 24,
                         ),
                         onPressed:
-                            () => pageTransition(context, const VictimLogin()),
+                            () => Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => const VictimLogin(),
+                              ),
+                            ),
                       ),
                       const Spacer(),
                       const Text('Reset Password', style: AppText.appHeader),

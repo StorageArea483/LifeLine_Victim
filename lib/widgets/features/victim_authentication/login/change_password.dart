@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:life_line/utils/styles.dart';
-import 'package:life_line/widgets/constants/constants.dart';
+import 'package:life_line/styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:life_line/services/functions/transitions_in_pages.dart';
 import 'package:life_line/widgets/features/victim_authentication/login/password_forgot.dart';
 import 'package:life_line/widgets/features/victim_dashboard/victim_page.dart';
 
@@ -51,7 +49,9 @@ class _ChangePasswordState extends State<ChangePassword> {
               backgroundColor: Colors.green,
             ),
           );
-          pageTransition(context, const VictimPage());
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const VictimPage()),
+          );
         }
       } else {
         if (mounted) {
@@ -99,8 +99,11 @@ class _ChangePasswordState extends State<ChangePassword> {
                           size: 24,
                         ),
                         onPressed:
-                            () =>
-                                pageTransition(context, const PasswordForgot()),
+                            () => Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => const PasswordForgot(),
+                              ),
+                            ),
                       ),
                       const Spacer(),
                       const Text('Change Password', style: AppText.appHeader),

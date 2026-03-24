@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:life_line/services/functions/transitions_in_pages.dart';
 import 'package:life_line/widgets/features/victim_dashboard/victim_page.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
 
@@ -49,7 +48,7 @@ class _OpenStreetMapScreenState extends State<OpenStreetMapScreen> {
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.lifeline.app',
                 ),
-                CurrentLocationLayer(
+                const CurrentLocationLayer(
                   style: LocationMarkerStyle(marker: DefaultLocationMarker()),
                 ),
               ],
@@ -64,7 +63,9 @@ class _OpenStreetMapScreenState extends State<OpenStreetMapScreen> {
             currentIndex = index;
           });
           if (index == 0) {
-            pageTransition(context, VictimPage());
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const VictimPage()),
+            );
           }
         },
       ),
