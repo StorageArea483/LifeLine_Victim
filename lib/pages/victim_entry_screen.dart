@@ -71,7 +71,7 @@ class VictimEntryScreen extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 35),
 
                 // Hero Section with Animation
                 Container(
@@ -113,7 +113,7 @@ class VictimEntryScreen extends StatelessWidget {
                       const SizedBox(height: 16),
 
                       Text(
-                        'Request emergency assistance, connect\nwith rescuers, and get support fast.',
+                        'Request emergency assistance,\nconnect with rescuers, and get\nsupport fast.',
 
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,

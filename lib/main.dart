@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line/firebase_options.dart';
 import 'package:life_line/pages/victim_entry_screen.dart';
 import 'package:life_line/widgets/global/victim_blocked.dart';
-import 'package:life_line/widgets/features/victim_dashboard/victim_page.dart';
+import 'package:life_line/pages/victim_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

@@ -3,7 +3,7 @@ import 'package:life_line/styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:life_line/widgets/features/victim_authentication/login/password_forgot.dart';
 import 'package:life_line/widgets/global/welcome_page.dart';
-import 'package:life_line/widgets/features/victim_dashboard/victim_page.dart';
+import 'package:life_line/pages/victim_page.dart';
 import 'package:life_line/widgets/global/victim_blocked.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

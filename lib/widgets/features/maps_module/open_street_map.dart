@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:life_line/widgets/features/victim_dashboard/victim_page.dart';
+import 'package:life_line/pages/victim_page.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
 
 class OpenStreetMapScreen extends StatefulWidget {

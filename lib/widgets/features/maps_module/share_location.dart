@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/features/maps_module/open_street_map.dart';
-import 'package:life_line/widgets/features/victim_dashboard/victim_page.dart';
+import 'package:life_line/pages/victim_page.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
