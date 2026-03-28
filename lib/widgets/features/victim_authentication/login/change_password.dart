@@ -105,9 +105,9 @@ class _ChangePasswordState extends State<ChangePassword> {
                               ),
                             ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 24),
                       const Text('Change Password', style: AppText.appHeader),
-                      const Spacer(flex: 2),
+                      const Expanded(flex: 2, child: SizedBox()),
                     ],
                   ),
 

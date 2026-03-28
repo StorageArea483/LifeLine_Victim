@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:life_line/widgets/features/victim_authentication/login/password_forgot.dart';
-import 'package:life_line/widgets/features/victim_authentication/sign_up/welcome_page.dart';
+import 'package:life_line/widgets/global/welcome_page.dart';
 import 'package:life_line/widgets/features/victim_dashboard/victim_page.dart';
 import 'package:life_line/widgets/global/victim_blocked.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -127,9 +127,9 @@ class _VictimLoginState extends State<VictimLogin> {
                               ),
                             ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 24),
                       const Text('Login', style: AppText.appHeader),
-                      const Spacer(flex: 2),
+                      const Expanded(flex: 2, child: SizedBox()),
                     ],
                   ),
 

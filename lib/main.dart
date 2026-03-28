@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line/firebase_options.dart';
 import 'package:life_line/widgets/global/victim_entry_screen.dart';
 import 'package:life_line/widgets/global/victim_blocked.dart';
@@ -11,7 +12,7 @@ import 'package:life_line/styles/styles.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

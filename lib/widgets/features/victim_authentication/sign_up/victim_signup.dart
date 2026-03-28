@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:life_line/providers/loading_state_provider.dart';
 import 'package:life_line/widgets/global/verify_email_otp.dart';
-import 'package:life_line/widgets/features/victim_authentication/sign_up/welcome_page.dart';
+import 'package:life_line/widgets/global/welcome_page.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class VictimSignup extends StatefulWidget {
+class VictimSignup extends ConsumerStatefulWidget {
   const VictimSignup({super.key});
 
   @override
-  State<VictimSignup> createState() => _VictimSignupState();
+  ConsumerState<VictimSignup> createState() => _VictimSignupState();
 }
 
-class _VictimSignupState extends State<VictimSignup> {
+class _VictimSignupState extends ConsumerState<VictimSignup> {
   final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -34,8 +35,9 @@ class _VictimSignupState extends State<VictimSignup> {
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
+    if (mounted) {
+      ref.read(isLoadingStateProvider.notifier).state = true;
+    }
 
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
@@ -108,49 +110,49 @@ class _VictimSignupState extends State<VictimSignup> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) ref.read(isLoadingStateProvider.notifier).state = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF7E8EC),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: AppColors.darkCharcoal,
+            size: 20,
+          ),
+          onPressed:
+              () => Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const WelcomePage()),
+              ),
+        ),
+      ),
       body: Container(
         decoration: AppContainers.pageContainer,
         child: SafeArea(
           child: SingleChildScrollView(
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back_ios,
-                          color: AppColors.darkCharcoal,
-                          size: 24,
-                        ),
-                        onPressed:
-                            () => Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(
-                                builder: (context) => const WelcomePage(),
-                              ),
-                            ),
-                      ),
-                    ],
+                Center(
+                  child: Image.asset(
+                    'assets/images/app_bg_removed.png',
+                    width: 100,
+                    height: 100,
                   ),
                 ),
-
-                const SizedBox(height: 8),
-
+                const SizedBox(height: 10),
                 const Text(
                   'Disaster Relief & Emergency\nResponse',
                   textAlign: TextAlign.center,
                   style: AppText.appHeader,
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -195,7 +197,7 @@ class _VictimSignupState extends State<VictimSignup> {
 
                             _buildTextField(
                               'Email Address',
-                              'example@email.com',
+                              'example@gmail.com',
                               _emailController,
                               false,
                             ),
@@ -268,20 +270,27 @@ class _VictimSignupState extends State<VictimSignup> {
                             SizedBox(
                               width: double.infinity,
                               height: 48,
-                              child: ElevatedButton(
-                                style: AppButtons.submit,
-                                onPressed: _isLoading ? null : _handleSubmit,
-                                child:
-                                    _isLoading
-                                        ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                        : const Text('Submit'),
+                              child: Consumer(
+                                builder: (context, ref, child) {
+                                  final isLoading = ref.watch(
+                                    isLoadingStateProvider,
+                                  );
+                                  return ElevatedButton(
+                                    style: AppButtons.submit,
+                                    onPressed: isLoading ? null : _handleSubmit,
+                                    child:
+                                        isLoading
+                                            ? const SizedBox(
+                                              height: 20,
+                                              width: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                            : const Text('Submit'),
+                                  );
+                                },
                               ),
                             ),
                           ],

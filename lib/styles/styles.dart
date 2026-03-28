@@ -11,7 +11,7 @@ class SimpleDecoration {
 }
 
 class AppColors {
-  static const Color softBackground = Color(0xFFF7E8EC);
+  static const Color softBackground = Color(0xFFF3F8F2);
   static const Color accentRose = Color(0xFFC57C8A);
   static const Color primaryMaroon = Color(0xFF732C3F);
   static const Color darkCharcoal = Color(0xFF1A0B12);

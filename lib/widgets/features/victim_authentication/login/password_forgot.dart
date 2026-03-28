@@ -104,9 +104,9 @@ class _PasswordForgotState extends State<PasswordForgot> {
                               ),
                             ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 24),
                       const Text('Reset Password', style: AppText.appHeader),
-                      const Spacer(flex: 2),
+                      const Expanded(flex: 2, child: SizedBox()),
                     ],
                   ),
 

@@ -47,28 +47,30 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCgdeU_737w9twNR2zt5dzyG5EXK5uKxR0',
-    appId: '1:909144850972:web:a9eb7a5cfcec7e437c55d9',
-    messagingSenderId: '909144850972',
-    projectId: 'life-line-victim-27aaa',
-    authDomain: 'life-line-victim-27aaa.firebaseapp.com',
-    storageBucket: 'life-line-victim-27aaa.firebasestorage.app',
+    apiKey: 'AIzaSyBfT0vduZD3KkLEofHqlZCsv-VVIb-0NKY',
+    appId: '1:1056625974316:web:9bd68dba392206219b4589',
+    messagingSenderId: '1056625974316',
+    projectId: 'link-up-data-987c1',
+    authDomain: 'link-up-data-987c1.firebaseapp.com',
+    storageBucket: 'link-up-data-987c1.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDxYe-nH3pXUrSg4djqulFbtinb9ITVzys',
-    appId: '1:909144850972:android:3953621a9efff1297c55d9',
-    messagingSenderId: '909144850972',
-    projectId: 'life-line-victim-27aaa',
-    storageBucket: 'life-line-victim-27aaa.firebasestorage.app',
+    apiKey: 'AIzaSyD0QY2KiMnUcwrAPz4rbTfciGdYP_Mmktc',
+    appId: '1:1056625974316:android:a743ed971cc4e7589b4589',
+    messagingSenderId: '1056625974316',
+    projectId: 'link-up-data-987c1',
+    storageBucket: 'link-up-data-987c1.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBaHw4XgFxhYk2JLdLmqSSvqMarSgko0cI',
-    appId: '1:909144850972:ios:190ecbb64dd78f667c55d9',
-    messagingSenderId: '909144850972',
-    projectId: 'life-line-victim-27aaa',
-    storageBucket: 'life-line-victim-27aaa.firebasestorage.app',
+    apiKey: 'AIzaSyCkm_bANRCHY0EDEZpHO_PUY1WLDPu5T-Q',
+    appId: '1:1056625974316:ios:d71d8c0c6c76d6669b4589',
+    messagingSenderId: '1056625974316',
+    projectId: 'link-up-data-987c1',
+    storageBucket: 'link-up-data-987c1.firebasestorage.app',
+    androidClientId: '1056625974316-0bh5j7mjt323p9e2427699dqqehegp63.apps.googleusercontent.com',
+    iosClientId: '1056625974316-dqonijhnm892b9t2hfhejq0dp1doveo7.apps.googleusercontent.com',
     iosBundleId: 'com.example.lifeLine',
   );
 
