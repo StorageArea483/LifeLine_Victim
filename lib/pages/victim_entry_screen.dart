@@ -206,12 +206,15 @@ class VictimEntryScreen extends StatelessWidget {
                       ),
                     ),
 
-                    onPressed:
-                        () => Navigator.of(context).pushReplacement(
+                    onPressed: () {
+                      if (context.mounted) {
+                        Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
                             builder: (context) => const WelcomePage(),
                           ),
-                        ),
+                        );
+                      }
+                    },
 
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -457,7 +460,11 @@ class VictimEntryScreen extends StatelessWidget {
                               ),
                             ),
 
-                            onPressed: () => Navigator.of(ctx).pop(),
+                            onPressed: () {
+                              if (ctx.mounted) {
+                                Navigator.of(ctx).pop();
+                              }
+                            },
 
                             child: Text(
                               'Close',
@@ -476,31 +483,35 @@ class VictimEntryScreen extends StatelessWidget {
                             style: AppButtons.primary,
 
                             onPressed: () {
-                              Navigator.of(ctx).pop();
+                              if (ctx.mounted) {
+                                Navigator.of(ctx).pop();
+                              }
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text(
-                                    'You agreed to our terms and conditions.',
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text(
+                                      'You agreed to our terms and conditions.',
 
-                                    textAlign: TextAlign.center,
+                                      textAlign: TextAlign.center,
 
-                                    style: TextStyle(
-                                      fontSize: 14,
+                                      style: TextStyle(
+                                        fontSize: 14,
 
-                                      fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+
+                                    backgroundColor: AppColors.success,
+
+                                    behavior: SnackBarBehavior.floating,
+
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
                                   ),
-
-                                  backgroundColor: AppColors.success,
-
-                                  behavior: SnackBarBehavior.floating,
-
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              );
+                                );
+                              }
                             },
 
                             child: Text(

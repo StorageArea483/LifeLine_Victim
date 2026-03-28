@@ -1,3 +1,7 @@
 import 'package:flutter_riverpod/legacy.dart';
 
-final isLoadingStateProvider = StateProvider<bool>((ref) => false);
+final isLoadingStateProvider = StateProvider.autoDispose<bool>((ref) => false);
+
+final isResendLoadingStateProvider = StateProvider.autoDispose<bool>(
+  (ref) => false,
+);

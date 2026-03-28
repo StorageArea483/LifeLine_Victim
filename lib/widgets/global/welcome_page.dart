@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:life_line/widgets/features/victim_authentication/login/victim_login.dart';
-import 'package:life_line/widgets/global/victim_entry_screen.dart';
+import 'package:life_line/pages/victim_entry_screen.dart';
 import 'package:life_line/widgets/features/victim_authentication/sign_up/victim_signup.dart';
 import 'package:life_line/styles/styles.dart';
 
@@ -19,12 +19,15 @@ class WelcomePage extends StatelessWidget {
             color: AppColors.darkCharcoal,
             size: 20,
           ),
-          onPressed:
-              () => Navigator.of(context).pushReplacement(
+          onPressed: () {
+            if (context.mounted) {
+              Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (context) => const VictimEntryScreen(),
                 ),
-              ),
+              );
+            }
+          },
         ),
       ),
       body: Container(
@@ -90,12 +93,15 @@ class WelcomePage extends StatelessWidget {
                   height: 56,
                   child: ElevatedButton(
                     style: AppButtons.primary,
-                    onPressed:
-                        () => Navigator.of(context).pushReplacement(
+                    onPressed: () {
+                      if (context.mounted) {
+                        Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
                             builder: (context) => const VictimLogin(),
                           ),
-                        ),
+                        );
+                      }
+                    },
                     child: const Text(
                       'Login',
                       style: TextStyle(
@@ -126,12 +132,15 @@ class WelcomePage extends StatelessWidget {
                       ),
                       elevation: 0,
                     ),
-                    onPressed:
-                        () => Navigator.of(context).pushReplacement(
+                    onPressed: () {
+                      if (context.mounted) {
+                        Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
                             builder: (context) => const VictimSignup(),
                           ),
-                        ),
+                        );
+                      }
+                    },
                     child: const Text(
                       'Sign Up',
                       style: TextStyle(

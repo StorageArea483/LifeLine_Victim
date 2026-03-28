@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line/providers/loading_state_provider.dart';
+import 'package:life_line/providers/toggle_state_provider.dart';
 import 'package:life_line/widgets/global/verify_email_otp.dart';
 import 'package:life_line/widgets/global/welcome_page.dart';
 import 'package:life_line/styles/styles.dart';
@@ -103,8 +104,8 @@ class _VictimSignupState extends ConsumerState<VictimSignup> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Something went wrong. Please try again.'),
+          SnackBar(
+            content: Text('Something went wrong. Please try again. $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -126,129 +127,177 @@ class _VictimSignupState extends ConsumerState<VictimSignup> {
             color: AppColors.darkCharcoal,
             size: 20,
           ),
-          onPressed:
-              () => Navigator.of(context).pushReplacement(
+          onPressed: () {
+            if (context.mounted) {
+              Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (context) => const WelcomePage()),
-              ),
+              );
+            }
+          },
         ),
       ),
       body: Container(
         decoration: AppContainers.pageContainer,
         child: SafeArea(
           child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: Column(
               children: [
+                // Logo Section
                 Center(
-                  child: Image.asset(
-                    'assets/images/app_bg_removed.png',
-                    width: 100,
-                    height: 100,
+                  child: Column(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Image.asset(
+                          'assets/images/app_bg_removed.png',
+                          width: 100,
+                          height: 100,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'LifeLine',
+                        style: TextStyle(
+                          fontFamily: 'SFPro',
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primaryMaroon,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Create Your Account',
+                        style: AppText.subtitle.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Disaster Relief & Emergency\nResponse',
-                  textAlign: TextAlign.center,
-                  style: AppText.appHeader,
                 ),
 
                 const SizedBox(height: 30),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
+                // Form Container with Modern Design
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Personal Information',
+                          style: AppText.formTitle.copyWith(
+                            color: AppColors.primaryMaroon,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Please provide your details to continue',
+                          style: AppText.formDescription.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        _buildTextField(
+                          'First Name',
+                          'Enter your first name',
+                          _firstNameController,
+                          true,
+                        ),
+                        const SizedBox(height: 20),
+
+                        _buildTextField(
+                          'Last Name',
+                          'Enter your last name',
+                          _lastNameController,
+                          true,
+                        ),
+                        const SizedBox(height: 20),
+
+                        _buildTextField(
+                          'Email Address',
+                          'Enter your email',
+                          _emailController,
+                          false,
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Phone Number
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Enter Your Information',
-                              style: AppText.formTitle,
+                            Text(
+                              'Phone Number',
+                              style: AppText.fieldLabel.copyWith(
+                                color: AppColors.darkCharcoal,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
-                              'Please provide your details below.',
-                              style: AppText.formDescription,
-                            ),
-                            const SizedBox(height: 24),
-
-                            _buildTextField(
-                              'First Name',
-                              'Ali',
-                              _firstNameController,
-                              true,
-                            ),
-                            const SizedBox(height: 16),
-
-                            _buildTextField(
-                              'Last Name',
-                              'Ahmed',
-                              _lastNameController,
-                              true,
-                            ),
-                            const SizedBox(height: 16),
-
-                            _buildTextField(
-                              'Email Address',
-                              'example@gmail.com',
-                              _emailController,
-                              false,
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Phone Number
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Phone Number',
-                                  style: AppText.fieldLabel,
-                                ),
-                                const SizedBox(height: 8),
-                                TextFormField(
-                                  controller: _phoneController,
-                                  keyboardType: TextInputType.phone,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                    LengthLimitingTextInputFormatter(11),
-                                  ],
-                                  validator: (value) {
-                                    final v = value?.trim() ?? '';
-                                    if (v.isEmpty) {
-                                      return 'This field is required';
-                                    }
-                                    if (!RegExp(r'^\d{11}$').hasMatch(v)) {
-                                      return 'Enter exactly 11 digits';
-                                    }
-                                    return null;
-                                  },
-                                  decoration: AppTextFields.textFieldDecoration(
-                                    '03XXXXXXXXX',
-                                  ),
-                                ),
+                            TextFormField(
+                              controller: _phoneController,
+                              keyboardType: TextInputType.phone,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(11),
                               ],
+                              validator: (value) {
+                                final v = value?.trim() ?? '';
+                                if (v.isEmpty) {
+                                  return 'This field is required';
+                                }
+                                if (!RegExp(r'^\d{11}$').hasMatch(v)) {
+                                  return 'Enter exactly 11 digits';
+                                }
+                                return null;
+                              },
+                              decoration: AppTextFields.textFieldDecoration(
+                                '03XXXXXXXXX',
+                              ),
                             ),
-                            const SizedBox(height: 16),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
 
-                            // Password
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Password',
-                                  style: AppText.fieldLabel,
-                                ),
-                                const SizedBox(height: 8),
-                                TextFormField(
+                        // Password
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Password',
+                              style: AppText.fieldLabel.copyWith(
+                                color: AppColors.darkCharcoal,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Consumer(
+                              builder: (context, ref, child) {
+                                final togglePasswordVisibility = ref.watch(
+                                  toggleStateProvider,
+                                );
+                                return TextFormField(
                                   controller: _passwordController,
-                                  obscureText: true,
+                                  obscureText: !togglePasswordVisibility,
                                   keyboardType: TextInputType.visiblePassword,
                                   validator: (value) {
                                     if (value == null || value.trim().isEmpty) {
@@ -260,44 +309,116 @@ class _VictimSignupState extends ConsumerState<VictimSignup> {
                                     return null;
                                   },
                                   decoration: AppTextFields.textFieldDecoration(
-                                    'Enter password',
+                                    'Create a strong password',
+                                  ).copyWith(
+                                    suffixIcon: IconButton(
+                                      onPressed: () {
+                                        ref
+                                            .read(toggleStateProvider.notifier)
+                                            .state = !togglePasswordVisibility;
+                                      },
+                                      icon: Icon(
+                                        togglePasswordVisibility
+                                            ? Icons.visibility
+                                            : Icons.visibility_off,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 40),
-
-                            SizedBox(
-                              width: double.infinity,
-                              height: 48,
-                              child: Consumer(
-                                builder: (context, ref, child) {
-                                  final isLoading = ref.watch(
-                                    isLoadingStateProvider,
-                                  );
-                                  return ElevatedButton(
-                                    style: AppButtons.submit,
-                                    onPressed: isLoading ? null : _handleSubmit,
-                                    child:
-                                        isLoading
-                                            ? const SizedBox(
-                                              height: 20,
-                                              width: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                            : const Text('Submit'),
-                                  );
-                                },
-                              ),
+                                );
+                              },
                             ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 32),
+
+                        // Primary CTA with Gradient
+                        Container(
+                          width: double.infinity,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: const LinearGradient(
+                              colors: [
+                                AppColors.primaryMaroon,
+                                AppColors.accentRose,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primaryMaroon.withOpacity(0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            onPressed: () {
+                              final isLoading = ref.read(
+                                isLoadingStateProvider,
+                              );
+                              if (!isLoading) _handleSubmit();
+                            },
+                            child: Consumer(
+                              builder: (context, ref, child) {
+                                final isLoading = ref.watch(
+                                  isLoadingStateProvider,
+                                );
+                                return isLoading
+                                    ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                    : const Text(
+                                      'Create Account',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                        fontFamily: 'SFPro',
+                                      ),
+                                    );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // Trust Indicator
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.verified,
+                      size: 16,
+                      color: AppColors.primaryMaroon.withOpacity(0.7),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Your information is safe and secure',
+                      style: AppText.small.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 20),
@@ -318,7 +439,13 @@ class _VictimSignupState extends ConsumerState<VictimSignup> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppText.fieldLabel),
+        Text(
+          label,
+          style: AppText.fieldLabel.copyWith(
+            color: AppColors.darkCharcoal,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -333,10 +460,27 @@ class _VictimSignupState extends ConsumerState<VictimSignup> {
                 return 'Name should only contain letters and spaces';
               }
             } else {
-              if (!RegExp(
-                r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-              ).hasMatch(value.trim())) {
-                return 'Please enter a valid email address';
+              final email = value.trim().toLowerCase();
+
+              // Must match: anything@gmail.com exactly
+              if (!RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$').hasMatch(email)) {
+                return 'Please enter a valid address (e.g. example@gmail.com)';
+              }
+
+              // Local part (before @) must be at least 6 characters
+              final localPart = email.split('@')[0];
+              if (localPart.length < 6) {
+                return 'Gmail username must be at least 6 characters';
+              }
+
+              // Local part cannot start or end with a dot
+              if (localPart.startsWith('.') || localPart.endsWith('.')) {
+                return 'Gmail address cannot start or end with a dot';
+              }
+
+              // Local part cannot have consecutive dots
+              if (localPart.contains('..')) {
+                return 'Gmail address cannot contain consecutive dots';
               }
             }
             return null;
