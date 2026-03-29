@@ -1,7 +1,6 @@
 import 'package:life_line/models/phone_entry.dart';
 
 class Organization {
-  final String category;
   final String name;
   final String type;
   final String description;
@@ -9,7 +8,6 @@ class Organization {
   final List<PhoneEntry> phones;
 
   const Organization({
-    required this.category,
     required this.name,
     required this.type,
     required this.description,

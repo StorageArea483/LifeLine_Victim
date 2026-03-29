@@ -16,6 +16,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.example.life_line"
     compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
