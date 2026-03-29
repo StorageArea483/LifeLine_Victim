@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'package:life_line/widgets/global/welcome_page.dart';
-
 import 'package:life_line/styles/styles.dart';
+import 'package:life_line/widgets/google_authentication.dart';
 
-class VictimEntryScreen extends StatelessWidget {
-  const VictimEntryScreen({super.key});
+class GoogleSignup extends StatelessWidget {
+  const GoogleSignup({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -73,58 +72,26 @@ class VictimEntryScreen extends StatelessWidget {
 
                 const SizedBox(height: 35),
 
-                // Hero Section with Animation
+                // Hero Section
                 Container(
-                  padding: const EdgeInsets.all(32),
-
+                  width: double.infinity,
+                  height: 240,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-
-                    borderRadius: BorderRadius.circular(24),
-
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-
+                        color: AppColors.primaryMaroon.withOpacity(0.15),
                         blurRadius: 20,
-
                         offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-
-                  child: Column(
-                    children: [
-                      Text(
-                        'A disaster Relief\nPlatform',
-
-                        textAlign: TextAlign.center,
-
-                        style: AppText.welcomeTitle.copyWith(
-                          height: 1.2,
-
-                          letterSpacing: -0.5,
-                          overflow: TextOverflow.ellipsis,
-
-                          color: AppColors.darkCharcoal,
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      Text(
-                        'Request emergency assistance,\nconnect with rescuers, and get\nsupport fast.',
-
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-
-                        style: AppText.subtitle.copyWith(
-                          height: 1.5,
-
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      'assets/images/community_join_image.jpeg',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
 
@@ -167,85 +134,11 @@ class VictimEntryScreen extends StatelessWidget {
 
                 const SizedBox(height: 40),
 
-                // Primary CTA with Gradient
-                Container(
+                // Primary CTA
+                const SizedBox(
                   width: double.infinity,
-
-                  height: 56,
-
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primaryMaroon, AppColors.accentRose],
-
-                      begin: Alignment.topLeft,
-
-                      end: Alignment.bottomRight,
-                    ),
-
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryMaroon.withOpacity(0.3),
-
-                        blurRadius: 15,
-
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-
-                      shadowColor: Colors.transparent,
-
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-
-                    onPressed: () {
-                      if (context.mounted) {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => const WelcomePage(),
-                          ),
-                        );
-                      }
-                    },
-
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-
-                      children: [
-                        Text(
-                          'Get Started',
-
-                          style: TextStyle(
-                            fontSize: 18,
-
-                            fontWeight: FontWeight.w600,
-
-                            color: Colors.white,
-
-                            fontFamily: 'SFPro',
-                          ),
-                        ),
-
-                        SizedBox(width: 12),
-
-                        Icon(
-                          Icons.arrow_forward_rounded,
-
-                          size: 20,
-
-                          color: Colors.white,
-                        ),
-                      ],
-                    ),
-                  ),
+                  height: 50,
+                  child: GoogleAuthentication(),
                 ),
 
                 const SizedBox(height: 30),

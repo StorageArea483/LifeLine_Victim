@@ -1,11 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/features/maps_module/open_street_map.dart';
-import 'package:life_line/pages/victim_page.dart';
+import 'package:life_line/pages/landing_page.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:life_line/widgets/fetch_lat_long.dart';
 
 class ShareLocation extends StatefulWidget {
@@ -43,9 +43,7 @@ class _ShareLocationState extends State<ShareLocation> {
         Placemark place = placemarks.first;
         String fullAddress =
             'Street: ${place.street}\nArea: ${place.subLocality}\nDistrict: ${place.subAdministrativeArea}';
-
-        final prefs = await SharedPreferences.getInstance();
-        final String? userEmail = prefs.getString('userEmail');
+        final userEmail = FirebaseAuth.instance.currentUser?.email;
 
         if (userEmail != null && userEmail.isNotEmpty) {
           final querySnapshot =
@@ -196,7 +194,7 @@ class _ShareLocationState extends State<ShareLocation> {
           setState(() => _currentIndex = index);
           if (index == 0) {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const VictimPage()),
+              MaterialPageRoute(builder: (context) => const LandingPage()),
             );
           }
         },

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:life_line/pages/victim_page.dart';
+import 'package:life_line/pages/landing_page.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
 
 class OpenStreetMapScreen extends StatefulWidget {
@@ -64,7 +64,7 @@ class _OpenStreetMapScreenState extends State<OpenStreetMapScreen> {
           });
           if (index == 0) {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const VictimPage()),
+              MaterialPageRoute(builder: (context) => const LandingPage()),
             );
           }
         },

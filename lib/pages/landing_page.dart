@@ -1,20 +1,20 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
 import 'package:life_line/widgets/features/maps_module/share_location.dart';
-import 'package:life_line/widgets/google_flood_service.dart';
+import 'package:life_line/services/google_flood_service.dart';
 import 'package:life_line/widgets/fetch_lat_long.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class VictimPage extends StatefulWidget {
-  const VictimPage({super.key});
+class LandingPage extends StatefulWidget {
+  const LandingPage({super.key});
 
   @override
-  State<VictimPage> createState() => _VictimPageState();
+  State<LandingPage> createState() => _LandingPageState();
 }
 
-class _VictimPageState extends State<VictimPage> {
+class _LandingPageState extends State<LandingPage> {
   int _currentIndex = 0;
   bool _showEmergencyOptions = false;
   bool _isCheckingFlood = false;
@@ -258,8 +258,7 @@ class _VictimPageState extends State<VictimPage> {
 
   Future<void> _saveSeverityToDatabase(String severity) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? userEmail = prefs.getString('userEmail');
+      final String? userEmail = FirebaseAuth.instance.currentUser?.email;
       if (userEmail == null || userEmail.isEmpty) return;
 
       final querySnapshot =

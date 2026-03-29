@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:life_line/pages/google_signup.dart';
 import 'package:life_line/styles/styles.dart';
-import 'package:life_line/widgets/features/victim_authentication/sign_up/victim_signup.dart';
 
 class VictimBlocked extends StatelessWidget {
   final String userEmail;
@@ -13,8 +13,8 @@ class VictimBlocked extends StatelessWidget {
       body: Container(
         decoration: AppContainers.pageContainer,
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
             child: Column(
               children: [
                 const SizedBox(height: 8),
@@ -94,7 +94,7 @@ class VictimBlocked extends StatelessWidget {
                       onPressed:
                           () => Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
-                              builder: (context) => const VictimSignup(),
+                              builder: (context) => const GoogleSignup(),
                             ),
                           ),
                       child: const Text('Return to SignUp page'),
