@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/google_authentication.dart';
@@ -135,10 +136,14 @@ class GoogleSignup extends StatelessWidget {
                 const SizedBox(height: 40),
 
                 // Primary CTA
-                const SizedBox(
+                SizedBox(
                   width: double.infinity,
                   height: 50,
-                  child: GoogleAuthentication(),
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      return GoogleAuthentication(ref);
+                    },
+                  ),
                 ),
 
                 const SizedBox(height: 30),
@@ -226,19 +231,19 @@ class GoogleSignup extends StatelessWidget {
       padding: const EdgeInsets.all(20),
 
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceLight,
 
         borderRadius: BorderRadius.circular(16),
 
-        border: Border.all(color: AppColors.surfaceLight, width: 1),
+        border: Border.all(color: AppColors.borderColor, width: 1),
 
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: AppColors.shadowLight,
 
             blurRadius: 10,
 
-            offset: const Offset(0, 4),
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -309,7 +314,7 @@ class GoogleSignup extends StatelessWidget {
               padding: const EdgeInsets.all(24),
 
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surfaceLight,
 
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -411,7 +416,7 @@ class GoogleSignup extends StatelessWidget {
                               'I Agree',
 
                               style: AppText.button.copyWith(
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             ),
                           ),

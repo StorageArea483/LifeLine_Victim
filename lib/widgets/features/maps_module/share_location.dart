@@ -28,7 +28,10 @@ class _ShareLocationState extends State<ShareLocation> {
       if (result.error != null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result.error!), backgroundColor: Colors.red),
+            SnackBar(
+              content: Text(result.error!),
+              backgroundColor: AppColors.error,
+            ),
           );
         }
         return;
@@ -82,7 +85,7 @@ class _ShareLocationState extends State<ShareLocation> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Location found but address is unavailable.'),
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.warning,
             ),
           );
         }
@@ -92,7 +95,7 @@ class _ShareLocationState extends State<ShareLocation> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to get location: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -175,7 +178,7 @@ class _ShareLocationState extends State<ShareLocation> {
                               width: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             )
                             : const Text('Allow Location Access'),

@@ -43,15 +43,15 @@ class VictimBlocked extends StatelessWidget {
                 Container(
                   width: 120,
                   height: 120,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFFE5E5),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Icon(
                       Icons.shield_outlined,
                       size: 60,
-                      color: Colors.red.shade600,
+                      color: AppColors.error,
                     ),
                   ),
                 ),

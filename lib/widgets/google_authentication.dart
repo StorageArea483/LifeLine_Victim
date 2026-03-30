@@ -6,20 +6,16 @@ import 'package:life_line/services/auth_service.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/internet_connection.dart';
 
-class GoogleAuthentication extends ConsumerWidget {
-  const GoogleAuthentication({super.key});
+class GoogleAuthentication extends StatelessWidget {
+  final WidgetRef ref;
+  const GoogleAuthentication(this.ref, {super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final isLoading = ref.watch(isLoadingStateProvider);
     return ElevatedButton(
       onPressed: isLoading ? null : () => _handleGoogleSignIn(context, ref),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.white,
-        foregroundColor: AppColors.textPrimary,
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+      style: AppButtons.primary,
       child:
           isLoading
               ? const SizedBox(
@@ -51,8 +47,9 @@ class GoogleAuthentication extends ConsumerWidget {
   }
 
   Future<void> _handleGoogleSignIn(BuildContext context, WidgetRef ref) async {
-    // Set loading to true
-    ref.read(isLoadingStateProvider.notifier).state = true;
+    final loadingNotifier = ref.read(isLoadingStateProvider.notifier);
+
+    loadingNotifier.state = true;
 
     try {
       final userCredential = await GoogleSignInService.signInWithGoogle();
@@ -69,16 +66,14 @@ class GoogleAuthentication extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
+        loadingNotifier.state = false;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Request not completed'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
-    } finally {
-      // Set loading to false
-      ref.read(isLoadingStateProvider.notifier).state = false;
     }
   }
 }

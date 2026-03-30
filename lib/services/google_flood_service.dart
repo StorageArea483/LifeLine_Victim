@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:life_line/styles/styles.dart';
 
 /// Model class to represent flood data
 class FloodData {
@@ -212,19 +213,19 @@ class GoogleFloodService {
     // Set color and icon based on risk level
     switch (floodData.riskLevel) {
       case 'High Risk':
-        backgroundColor = Colors.red;
+        backgroundColor = AppColors.error;
         icon = Icons.warning;
         break;
       case 'Medium Risk':
-        backgroundColor = Colors.orange;
+        backgroundColor = AppColors.warning;
         icon = Icons.warning_amber;
         break;
       case 'Low Risk':
-        backgroundColor = Colors.green;
+        backgroundColor = AppColors.success;
         icon = Icons.check_circle;
         break;
       default:
-        backgroundColor = Colors.grey;
+        backgroundColor = AppColors.textSecondary;
         icon = Icons.info;
     }
 
@@ -237,7 +238,7 @@ class GoogleFloodService {
       SnackBar(
         content: Row(
           children: [
-            Icon(icon, color: Colors.white),
+            Icon(icon, color: AppColors.white),
             const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],

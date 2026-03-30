@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:life_line/services/auth_service.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
 import 'package:life_line/widgets/features/maps_module/share_location.dart';
@@ -24,6 +25,19 @@ class _LandingPageState extends State<LandingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppColors.accentRose,
+        title: const Text('LifeLine', style: AppText.appHeader),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.black),
+            onPressed: () {
+              GoogleSignInService.signOut();
+            },
+          ),
+        ],
+      ),
       backgroundColor: AppColors.softBackground,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -32,27 +46,8 @@ class _LandingPageState extends State<LandingPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
-
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const SizedBox(width: 48),
-                    const Text('Home', style: AppText.appHeader),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.notifications_outlined,
-                        color: AppColors.primaryMaroon,
-                      ),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 40),
-
                 // SOS Section
+                const SizedBox(height: 10),
                 Center(
                   child: Column(
                     children: [
@@ -94,19 +89,19 @@ class _LandingPageState extends State<LandingPage> {
                             shape: BoxShape.circle,
                             border:
                                 _showEmergencyOptions
-                                    ? Border.all(color: Colors.blue, width: 4)
+                                    ? Border.all(
+                                      color: AppColors.primaryMaroon,
+                                      width: 4,
+                                    )
                                     : null,
                           ),
                           child: Center(
                             child: Container(
                               width: 200,
                               height: 200,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
-                                color:
-                                    _showEmergencyOptions
-                                        ? AppColors.accentRose
-                                        : Colors.red,
+                                color: Colors.red,
                               ),
                               child: const Center(
                                 child: Text(
@@ -115,7 +110,7 @@ class _LandingPageState extends State<LandingPage> {
                                     fontFamily: 'SFPro',
                                     fontSize: 48,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                   ),
                                 ),
                               ),
@@ -146,7 +141,7 @@ class _LandingPageState extends State<LandingPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.surfaceLight,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Row(
@@ -220,7 +215,7 @@ class _LandingPageState extends State<LandingPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(locationResult.error!),
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.error,
             ),
           );
         }
@@ -244,7 +239,10 @@ class _LandingPageState extends State<LandingPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     } finally {
@@ -258,22 +256,13 @@ class _LandingPageState extends State<LandingPage> {
 
   Future<void> _saveSeverityToDatabase(String severity) async {
     try {
-      final String? userEmail = FirebaseAuth.instance.currentUser?.email;
-      if (userEmail == null || userEmail.isEmpty) return;
+      final String? uid = FirebaseAuth.instance.currentUser?.uid; // ✅ use uid
+      if (uid == null || uid.isEmpty) return;
 
-      final querySnapshot =
-          await FirebaseFirestore.instance
-              .collection('victim-info-database')
-              .where('emailAddress', isEqualTo: userEmail)
-              .limit(1)
-              .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        await FirebaseFirestore.instance
-            .collection('victim-info-database')
-            .doc(querySnapshot.docs.first.id)
-            .update({'severity': severity});
-      }
+      await FirebaseFirestore.instance
+          .collection('users') // ✅ updated collection name
+          .doc(uid) // ✅ direct doc access, no query needed
+          .update({'severity': severity});
     } catch (e) {
       debugPrint('Error saving severity: $e');
     }
@@ -298,10 +287,10 @@ class _LandingPageState extends State<LandingPage> {
                   );
                 }
               },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primaryMaroon,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      style: AppButtons.primary.copyWith(
+        padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        ),
       ),
       child:
           isLoading
@@ -310,18 +299,10 @@ class _LandingPageState extends State<LandingPage> {
                 height: 12,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white,
+                  color: AppColors.white,
                 ),
               )
-              : Text(
-                label,
-                style: const TextStyle(
-                  fontFamily: 'SFPro',
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              : Text(label, style: AppText.submitButton.copyWith(fontSize: 12)),
     );
   }
 }

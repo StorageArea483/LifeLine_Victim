@@ -11,7 +11,7 @@ class GoogleSignInService {
     if (!isInitialize) {
       await _googleSignIn.initialize(
         serverClientId:
-            '491896404486-0g9md4n3jfufhv98sa0sbml29r4pjb1j.apps.googleusercontent.com',
+            '909144850972-c1u0ut6cdqibfkmbcgj5nd6r3jevfhk4.apps.googleusercontent.com',
       );
     }
     isInitialize = true;
@@ -20,7 +20,7 @@ class GoogleSignInService {
   // Sign in with Google
   static Future<UserCredential?> signInWithGoogle() async {
     try {
-      initSignIn();
+      await initSignIn();
       final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
       final idToken = googleUser.authentication.idToken;
       final authorizationClient = googleUser.authorizationClient;

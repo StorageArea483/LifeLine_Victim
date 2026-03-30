@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// Simple decorations - no shadows, no borders, just clean
 class SimpleDecoration {
   static BoxDecoration card() {
     return BoxDecoration(
@@ -11,30 +10,33 @@ class SimpleDecoration {
 }
 
 class AppColors {
-  static const Color softBackground = Color(0xFFF3F8F2);
-  static const Color accentRose = Color(0xFFC57C8A);
-  static const Color primaryMaroon = Color(0xFF732C3F);
-  static const Color darkCharcoal = Color(0xFF1A0B12);
+  static const Color softBackground = Color(0xFFF7F5F2);
+  static const Color surfaceLight = Color(0xFFFFFFFF);
+  static const Color primaryMaroon = Color(0xFFD97757);
+  static const Color accentRose = Color(0xFFD97757);
 
-  static const Color textPrimary = darkCharcoal;
-  static const Color textSecondary = Color(0xFF8B6B75);
-  static const Color textLight = Color(0xFFB39BA5);
-  static const Color textFooter = Color(0xFFAAAAAA); // Added from second code
+  static const Color darkCharcoal = Color(
+    0xFF1A1A1A,
+  ); // Near-black primary text
+  static const Color textPrimary = Color(0xFF1A1A1A); // Near-black primary text
+  static const Color textSecondary = Color(0xFF6B6860); // Muted warm gray
+  static const Color textLight = Color(0xFF6B6860); // Muted warm gray
+  static const Color textFooter = Color(0xFF6B6860); // Muted warm gray
 
-  static const Color surfaceLight = Color(0xFFFFFBFC);
+  // Border and divider colors
+  static const Color borderColor = Color(0xFFE5E2DC); // Soft warm gray
+  static const Color shadowLight = Color(0x0A000000); // Subtle shadow
 
-  // Use const colors instead of computed ones
-  static const Color shadowLight = Color(0x14732C3F);
-
+  // Status colors
   static const Color success = Color(0xFF4CAF50);
   static const Color error = Color(0xFFE53935);
   static const Color warning = Color(0xFFFFA726);
   static const Color info = Color(0xFF29B6F6);
 
-  // Added from second code
-  static const Color primaryBlue = Color(0xFF6BB2FF);
-  static const Color background = Color(0xFFF3F8F2);
+  // Legacy aliases
+  static const Color background = Color(0xFFF7F5F2);
   static const Color white = Colors.white;
+  static const Color primaryBlue = Color(0xFFD97757); // Map to orange
 }
 
 // Terms of Service
@@ -77,7 +79,7 @@ class AppDecorations {
   static const LinearGradient pageLinearGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFFF7E8EC), Color(0xFFFFFBFC)],
+    colors: [Color(0xFFF7F5F2), Color(0xFFF7F5F2)], // Solid warm off-white
   );
 }
 
@@ -186,22 +188,28 @@ class AppButtons {
   static final ButtonStyle primary = ElevatedButton.styleFrom(
     backgroundColor: AppColors.primaryMaroon,
     elevation: 0,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(9999),
+    ), // Pill-shaped
     foregroundColor: Colors.white,
   );
 
   static final ButtonStyle submit = ElevatedButton.styleFrom(
     backgroundColor: AppColors.primaryMaroon,
     elevation: 0,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(9999),
+    ), // Pill-shaped
     foregroundColor: Colors.white,
   );
 
   static final ButtonStyle dialogAgree = FilledButton.styleFrom(
     backgroundColor: Colors.white,
     foregroundColor: AppColors.primaryMaroon,
-    side: const BorderSide(color: AppColors.primaryMaroon, width: 1),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    side: const BorderSide(color: AppColors.borderColor, width: 1),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(9999),
+    ), // Pill-shaped
   );
 }
 
@@ -222,7 +230,15 @@ class AppTextFields {
       fillColor: Colors.white,
       border: const OutlineInputBorder(
         borderRadius: AppDecorations.textFieldBorderRadius,
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: AppColors.borderColor, width: 1),
+      ),
+      enabledBorder: const OutlineInputBorder(
+        borderRadius: AppDecorations.textFieldBorderRadius,
+        borderSide: BorderSide(color: AppColors.borderColor, width: 1),
+      ),
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: AppDecorations.textFieldBorderRadius,
+        borderSide: BorderSide(color: AppColors.primaryMaroon, width: 1),
       ),
       errorBorder: const OutlineInputBorder(
         borderRadius: AppDecorations.textFieldBorderRadius,

@@ -23,16 +23,15 @@ class CheckConnection extends StatelessWidget {
           return const InternetConnection(child: GoogleSignup());
         }
 
-        final String? email = authSnapshot.data!.email;
+        final String uid = authSnapshot.data!.uid;
+        final String email = authSnapshot.data!.email ?? '';
 
-        // StreamBuilder instead of FutureBuilder — stays alive and listens
-        return StreamBuilder<QuerySnapshot>(
+        return StreamBuilder<DocumentSnapshot>(
           stream:
               FirebaseFirestore.instance
                   .collection('users')
-                  .where('email', isEqualTo: email)
-                  .limit(1)
-                  .snapshots(), // <-- real-time listener
+                  .doc(uid)
+                  .snapshots(),
           builder: (context, firestoreSnapshot) {
             if (firestoreSnapshot.connectionState == ConnectionState.waiting) {
               return _loadingScreen();
@@ -40,19 +39,16 @@ class CheckConnection extends StatelessWidget {
 
             if (firestoreSnapshot.hasError ||
                 !firestoreSnapshot.hasData ||
-                firestoreSnapshot.data!.docs.isEmpty) {
+                !firestoreSnapshot.data!.exists) {
               return const InternetConnection(child: LandingPage());
             }
 
             final userData =
-                firestoreSnapshot.data!.docs.first.data()
-                    as Map<String, dynamic>;
+                firestoreSnapshot.data!.data() as Map<String, dynamic>;
             final bool isBlocked = userData['blocked'] ?? false;
 
             if (isBlocked) {
-              return InternetConnection(
-                child: VictimBlocked(userEmail: email ?? ''),
-              );
+              return InternetConnection(child: VictimBlocked(userEmail: email));
             }
 
             return const InternetConnection(child: LandingPage());

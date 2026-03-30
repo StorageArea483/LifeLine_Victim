@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:life_line/models/phone_entry.dart';
 import 'package:life_line/models/organization.dart';
+import 'package:life_line/styles/styles.dart';
 
 const List<Organization> _orgs = [
   // Rescue & Emergency
@@ -127,114 +128,237 @@ class OfflineConnectivity extends StatelessWidget {
   const OfflineConnectivity({super.key});
 
   Future<void> _call(BuildContext context, String number) async {
-    final uri = Uri(scheme: 'tel', path: number);
-    if (!await launchUrl(uri) && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not call $number')));
+    final uri = Uri.parse('tel:$number');
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
+        context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not call $number'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F4F8),
+      backgroundColor: AppColors.softBackground,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        titleSpacing: 20,
-        title: const Text(
-          'Emergency Contacts',
-          style: TextStyle(
-            color: Color(0xFF1A1A2E),
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
+        backgroundColor: AppColors.accentRose,
+        title: const Text('Offline Mode', style: AppText.appHeader),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: _orgs.length,
+          itemBuilder: (context, index) {
+            final org = _orgs[index];
+            return _buildOrganizationCard(context, org);
+          },
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: _orgs.length,
-        itemBuilder: (context, index) {
-          final org = _orgs[index];
+    );
+  }
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(12),
-
-              // Avatar
-              leading: CircleAvatar(
-                radius: 24,
-                backgroundColor: const Color(0xFFE3E8FF),
-                child: Text(
-                  org.initials,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1A2E),
+  Widget _buildOrganizationCard(BuildContext context, Organization org) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(16),
+        border: const Border(
+          left: BorderSide(color: AppColors.primaryMaroon, width: 4),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowLight,
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.primaryMaroon,
+                        AppColors.primaryMaroon.withOpacity(0.7),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryMaroon.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-
-              // Name + Description
-              title: Text(
-                org.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-
-                  Text(
-                    org.type,
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Text(
-                    org.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Phone numbers
-                  for (final phone in org.phones)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.phone, size: 14),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              '${phone.label}: ${phone.number}',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.call, size: 18),
-                            onPressed: () => _call(context, phone.number),
-                          ),
-                        ],
+                  child: Center(
+                    child: Text(
+                      org.initials,
+                      style: const TextStyle(
+                        fontFamily: 'SFPro',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: AppColors.white,
                       ),
                     ),
-                ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Name + Type Badge
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        org.name,
+                        style: AppText.fieldLabel.copyWith(fontSize: 15),
+                      ),
+                      const SizedBox(height: 6),
+                      // Type Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryMaroon.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.primaryMaroon.withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          org.type,
+                          style: const TextStyle(
+                            fontFamily: 'SFPro',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primaryMaroon,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Description
+            Text(
+              org.description,
+              style: AppText.small.copyWith(
+                height: 1.4,
+                color: AppColors.textSecondary,
               ),
             ),
-          );
-        },
+
+            // Divider
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Divider(
+                color: AppColors.borderColor,
+                thickness: 1,
+                height: 1,
+              ),
+            ),
+
+            // Phone Numbers Section
+            ...org.phones.map((phone) => _buildPhoneRow(context, phone)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhoneRow(BuildContext context, PhoneEntry phone) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          // Phone icon
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.textSecondary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Icon(
+              Icons.phone_outlined,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Label and number
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  phone.label,
+                  style: const TextStyle(
+                    fontFamily: 'SFPro',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  phone.number,
+                  style: const TextStyle(
+                    fontFamily: 'SFPro',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.darkCharcoal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Call button
+          ElevatedButton.icon(
+            onPressed: () => _call(context, phone.number),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryMaroon,
+              foregroundColor: AppColors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            icon: const Icon(Icons.call, size: 16),
+            label: const Text(
+              'Call',
+              style: TextStyle(
+                fontFamily: 'SFPro',
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
