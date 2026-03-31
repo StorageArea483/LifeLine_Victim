@@ -1,31 +1,36 @@
 import 'package:flutter_riverpod/legacy.dart';
 
 class LandingPageNotifier extends StateNotifier<LandingPageState> {
-  LandingPageNotifier()
-    : super(LandingPageState(showEmergencyOptions: false, isLoading: false));
+  LandingPageNotifier() : super(LandingPageState(showEmergencyOptions: false));
 
   void setShowEmergencyOptions(bool value) {
     state = state.copyWith(showEmergencyOptions: value);
   }
 
-  void setLoading(bool value) {
-    state = state.copyWith(isLoading: value);
+  void setActiveButton(String label) {
+    state = state.copyWith(activeButton: label);
+  }
+
+  void clearActiveButton() {
+    state = state.copyWith(clearActiveButton: true);
   }
 }
 
 class LandingPageState {
   final bool showEmergencyOptions;
-  final bool isLoading;
+  final String? activeButton;
 
-  LandingPageState({
-    required this.showEmergencyOptions,
-    required this.isLoading,
-  });
+  LandingPageState({required this.showEmergencyOptions, this.activeButton});
 
-  LandingPageState copyWith({bool? showEmergencyOptions, bool? isLoading}) {
+  LandingPageState copyWith({
+    bool? showEmergencyOptions,
+    String? activeButton,
+    bool clearActiveButton = false,
+  }) {
     return LandingPageState(
       showEmergencyOptions: showEmergencyOptions ?? this.showEmergencyOptions,
-      isLoading: isLoading ?? this.isLoading,
+      activeButton:
+          clearActiveButton ? null : activeButton ?? this.activeButton,
     );
   }
 }

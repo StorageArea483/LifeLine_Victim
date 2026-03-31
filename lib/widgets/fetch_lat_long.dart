@@ -49,7 +49,7 @@ Future<LocationResult> fetchLatLong() async {
     return LocationResult(
       latitude: 0.0,
       longitude: 0.0,
-      error: 'Failed to get location: $e',
+      error: 'Failed to get location',
     );
   }
 }

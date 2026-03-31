@@ -11,7 +11,7 @@ class FloodService {
   static const double _moderateRain = 20.0; // Medium Risk
 
   // Fetch current rain (mm/hour) at location
-  Future<double> _fetchRain(double lat, double lng) async {
+  Future<double?> _fetchRain(double lat, double lng) async {
     final url = Uri.parse(_weatherUrl).replace(
       queryParameters: {
         'latitude': lat.toString(),
@@ -31,8 +31,7 @@ class FloodService {
     final current = data['current'] as Map<String, dynamic>;
 
     return (current['rain'] as num?)?.toDouble() ??
-        (current['precipitation'] as num?)?.toDouble() ??
-        0.0;
+        (current['precipitation'] as num?)?.toDouble();
   }
 
   // Calculate risk purely from rain intensity
@@ -48,7 +47,14 @@ class FloodService {
     double longitude,
   ) async {
     try {
-      final double rain = await _fetchRain(latitude, longitude);
+      final double? rain = await _fetchRain(latitude, longitude);
+      if (rain == null) {
+        return FloodData(
+          rainMm: 0,
+          riskLevel: 'Error',
+          errorMessage: 'Unable to process your request, please try again',
+        );
+      }
       final String risk = _calculateRisk(rain);
 
       return FloodData(rainMm: rain, riskLevel: risk);
@@ -56,12 +62,11 @@ class FloodService {
       return FloodData(
         rainMm: 0,
         riskLevel: 'Error',
-        errorMessage: 'Could not fetch data. Check your internet.',
+        errorMessage: 'Unable to process your request, please try again',
       );
     }
   }
 
-  // Show result as SnackBar
   static void showFloodRisk(BuildContext context, FloodData data) {
     final Color bgColor;
     final IconData icon;

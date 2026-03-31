@@ -2,11 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>sms</string>
-		<string>tel</string>
-	</array>
 		<key>GIDClientID</key>
 		<string>909144850972-o5o79401uq1bim23715metqd3lmmb6p9.apps.googleusercontent.com</string>
 		<!-- Put me in the [my_project]/ios/Runner/Info.plist file -->

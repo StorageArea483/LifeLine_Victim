@@ -15,7 +15,7 @@ class BottomNavbar extends StatelessWidget {
       onTap: (index) {
         if (index == currentIndex) {
           return;
-        } else if (index == 0) {
+        } else if (index == 0 && context.mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const LandingPage()),
           );

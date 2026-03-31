@@ -47,9 +47,9 @@ class GoogleAuthentication extends StatelessWidget {
   }
 
   Future<void> _handleGoogleSignIn(BuildContext context, WidgetRef ref) async {
-    final loadingNotifier = ref.read(isLoadingStateProvider.notifier);
-
-    loadingNotifier.state = true;
+    if (context.mounted) {
+      ref.read(isLoadingStateProvider.notifier).state = true;
+    }
 
     try {
       final userCredential = await GoogleSignInService.signInWithGoogle();
@@ -66,7 +66,7 @@ class GoogleAuthentication extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        loadingNotifier.state = false;
+        ref.read(isLoadingStateProvider.notifier).state = false;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Request not completed'),
