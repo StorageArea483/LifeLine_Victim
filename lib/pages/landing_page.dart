@@ -1,40 +1,42 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:life_line/models/flood_data.dart';
+import 'package:life_line/providers/landing_page_providers.dart';
 import 'package:life_line/services/auth_service.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
-import 'package:life_line/widgets/features/maps_module/share_location.dart';
 import 'package:life_line/services/google_flood_service.dart';
 import 'package:life_line/widgets/fetch_lat_long.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class LandingPage extends StatefulWidget {
+class LandingPage extends ConsumerStatefulWidget {
   const LandingPage({super.key});
 
   @override
-  State<LandingPage> createState() => _LandingPageState();
+  ConsumerState<LandingPage> createState() => _LandingPageState();
 }
 
-class _LandingPageState extends State<LandingPage> {
-  int _currentIndex = 0;
-  bool _showEmergencyOptions = false;
-  bool _isCheckingFlood = false;
-
-  final GoogleFloodService _floodService = GoogleFloodService();
+class _LandingPageState extends ConsumerState<LandingPage> {
+  final FloodService _floodService = FloodService(); // ✅ fixed class name
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Watch both values at top of build — clean and reactive
+    final showEmergencyOptions = ref.watch(
+      landingPageProvider.select((v) => v.showEmergencyOptions),
+    );
+    final isLoading = ref.watch(landingPageProvider.select((v) => v.isLoading));
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppColors.accentRose,
         title: const Text('LifeLine', style: AppText.appHeader),
         centerTitle: true,
-        actions: [
+        actions: const [
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black),
-            onPressed: () {
-              GoogleSignInService.signOut();
-            },
+            icon: Icon(Icons.logout, color: Colors.black),
+            onPressed: GoogleSignInService.signOut,
           ),
         ],
       ),
@@ -46,12 +48,12 @@ class _LandingPageState extends State<LandingPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // SOS Section
                 const SizedBox(height: 10),
                 Center(
                   child: Column(
                     children: [
-                      if (_showEmergencyOptions) ...[
+                      // ✅ No Consumer needed — parent already watches state
+                      if (showEmergencyOptions) ...[
                         const Padding(
                           padding: EdgeInsets.only(bottom: 16),
                           child: Text(
@@ -65,22 +67,23 @@ class _LandingPageState extends State<LandingPage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              _buildEmergencyButton('Flood'),
+                              _buildEmergencyButton('Flood', isLoading),
                               const SizedBox(width: 12),
-                              _buildEmergencyButton('Accident'),
+                              _buildEmergencyButton('Accident', isLoading),
                               const SizedBox(width: 12),
-                              _buildEmergencyButton('Earthquake'),
+                              _buildEmergencyButton('Earthquake', isLoading),
                             ],
                           ),
                         ),
                       ],
 
-                      // SOS Button with outer ring when tapped
+                      // SOS Button
                       GestureDetector(
                         onTap: () {
-                          setState(() {
-                            _showEmergencyOptions = !_showEmergencyOptions;
-                          });
+                          // ✅ No mounted check needed for ref.read
+                          ref
+                              .read(landingPageProvider.notifier)
+                              .setShowEmergencyOptions(!showEmergencyOptions);
                         },
                         child: Container(
                           width: 220,
@@ -88,7 +91,7 @@ class _LandingPageState extends State<LandingPage> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border:
-                                _showEmergencyOptions
+                                showEmergencyOptions
                                     ? Border.all(
                                       color: AppColors.primaryMaroon,
                                       width: 4,
@@ -123,7 +126,6 @@ class _LandingPageState extends State<LandingPage> {
                 ),
 
                 const SizedBox(height: 24),
-
                 const Center(
                   child: Text(
                     'In case of emergency, press the button to alert responders.',
@@ -131,13 +133,9 @@ class _LandingPageState extends State<LandingPage> {
                     style: AppText.small,
                   ),
                 ),
-
                 const SizedBox(height: 40),
-
                 const Text('AI Assistant', style: AppText.fieldLabel),
                 const SizedBox(height: 16),
-
-                // Quick First Aid Card
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -167,48 +165,31 @@ class _LandingPageState extends State<LandingPage> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 40),
-
                 const Text('Recent Notifications', style: AppText.fieldLabel),
                 const SizedBox(height: 16),
-
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.all(24),
                     child: Text('No new notifications', style: AppText.small),
                   ),
                 ),
-
                 const SizedBox(height: 24),
               ],
             ),
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavbar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          if (index == 1) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const ShareLocation()),
-            );
-          }
-        },
-      ),
+      bottomNavigationBar: const BottomNavbar(currentIndex: 0),
     );
   }
 
   Future<void> _handleFloodCheck() async {
-    setState(() {
-      _isCheckingFlood = true;
-    });
+    // ✅ Set isLoading = true BEFORE starting work
+    ref.read(landingPageProvider.notifier).setLoading(true);
 
     try {
-      LocationResult locationResult = await fetchLatLong();
+      final locationResult = await fetchLatLong();
 
       if (locationResult.error != null) {
         if (mounted) {
@@ -222,7 +203,7 @@ class _LandingPageState extends State<LandingPage> {
         return;
       }
 
-      FloodData floodData = await _floodService.getFloodRiskForLocation(
+      final FloodData floodData = await _floodService.getFloodRiskForLocation(
         locationResult.latitude,
         locationResult.longitude,
       );
@@ -234,7 +215,7 @@ class _LandingPageState extends State<LandingPage> {
       }
 
       if (mounted) {
-        GoogleFloodService.showFloodRisk(context, floodData);
+        FloodService.showFloodRisk(context, floodData);
       }
     } catch (e) {
       if (mounted) {
@@ -246,34 +227,33 @@ class _LandingPageState extends State<LandingPage> {
         );
       }
     } finally {
+      // ✅ Always reset loading when done (success or error)
       if (mounted) {
-        setState(() {
-          _isCheckingFlood = false;
-        });
+        ref.read(landingPageProvider.notifier).setLoading(false);
       }
     }
   }
 
   Future<void> _saveSeverityToDatabase(String severity) async {
     try {
-      final String? uid = FirebaseAuth.instance.currentUser?.uid; // ✅ use uid
+      final String? uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null || uid.isEmpty) return;
 
-      await FirebaseFirestore.instance
-          .collection('users') // ✅ updated collection name
-          .doc(uid) // ✅ direct doc access, no query needed
-          .update({'severity': severity});
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'severity': severity,
+      });
     } catch (e) {
       debugPrint('Error saving severity: $e');
     }
   }
 
-  Widget _buildEmergencyButton(String label) {
-    final isLoading = _isCheckingFlood && label == 'Flood';
+  // ✅ isLoading passed as parameter — only Flood button shows spinner
+  Widget _buildEmergencyButton(String label, bool isLoading) {
+    final isFloodLoading = isLoading && label == 'Flood';
 
     return ElevatedButton(
       onPressed:
-          _isCheckingFlood
+          isFloodLoading
               ? null
               : () async {
                 if (label == 'Flood') {
@@ -293,7 +273,7 @@ class _LandingPageState extends State<LandingPage> {
         ),
       ),
       child:
-          isLoading
+          isFloodLoading
               ? const SizedBox(
                 width: 12,
                 height: 12,

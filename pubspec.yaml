@@ -16,8 +16,8 @@ dependencies:
   flutter_riverpod: ^3.3.1
   firebase_auth: ^6.3.0
   google_sign_in: ^7.2.0
-  connectivity_plus: ^7.0.0
-  url_launcher: ^6.3.2
+  connectivity_plus: ^6.1.5
+  direct_dialer: ^2.0.1
   
   #For OpenStreetMap
   latlong2: ^0.9.1
@@ -44,6 +44,7 @@ flutter:
   # Assets
   assets:
     - assets/images/ # include all images in this folder
+    - assets/logos/ # include all logos in this folder
     - assets/fonts/ # include all fonts in this folder
 
   # Fonts

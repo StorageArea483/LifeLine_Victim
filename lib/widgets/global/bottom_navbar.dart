@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:life_line/pages/landing_page.dart';
 import 'package:life_line/styles/styles.dart';
 
 class BottomNavbar extends StatelessWidget {
@@ -11,7 +12,19 @@ class BottomNavbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: currentIndex,
-      onTap: onTap,
+      onTap: (index) {
+        if (index == currentIndex) {
+          return;
+        } else if (index == 0) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LandingPage()),
+          );
+        } else if (index == 1) {
+          // Navigate to map
+        } else if (index == 2) {
+          // Navigate to profile
+        }
+      },
       type: BottomNavigationBarType.fixed,
       backgroundColor: AppColors.surfaceLight,
       selectedItemColor: AppColors.primaryMaroon,

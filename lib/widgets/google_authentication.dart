@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line/pages/landing_page.dart';
-import 'package:life_line/providers/loading_state_provider.dart';
+import 'package:life_line/providers/global_state_providers.dart';
 import 'package:life_line/services/auth_service.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/internet_connection.dart';

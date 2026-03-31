@@ -1,5 +1,5 @@
+import 'package:direct_dialer/direct_dialer.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:life_line/models/phone_entry.dart';
 import 'package:life_line/models/organization.dart';
 import 'package:life_line/styles/styles.dart';
@@ -7,23 +7,12 @@ import 'package:life_line/styles/styles.dart';
 const List<Organization> _orgs = [
   // Rescue & Emergency
   Organization(
-    name: 'Rescue 1122 KPK — Abbottabad',
+    name: 'Rescue 1122 KPK Abbottabad',
     type: 'Government Emergency Service',
     description:
         '24/7 emergency rescue, ambulance, and fire service across all KPK districts including Abbottabad.',
-    initials: 'R1',
-    phones: [
-      PhoneEntry('Emergency Hotline', '1122'),
-      PhoneEntry('District Landline', '0992331564'),
-    ],
-  ),
-  Organization(
-    name: 'Edhi Foundation — Abbottabad',
-    type: 'NGO / Ambulance Service',
-    description:
-        "Pakistan's largest ambulance network providing 24/7 emergency transport and disaster relief.",
-    initials: 'EF',
-    phones: [PhoneEntry('Ambulance Hotline', '115')],
+    initials: 'assets/logos/R1.webp',
+    phones: [PhoneEntry('District Landline', '0992331564')],
   ),
 
   // Government Disaster Management
@@ -32,7 +21,7 @@ const List<Organization> _orgs = [
     type: 'Provincial Government Authority',
     description:
         'Apex disaster management body for KPK. Coordinates flood, earthquake, and relief operations.',
-    initials: 'PD',
+    initials: 'assets/logos/PD.webp',
     phones: [
       PhoneEntry('Toll-Free Helpline', '1700'),
       PhoneEntry('Main Office', '0919219635'),
@@ -45,7 +34,7 @@ const List<Organization> _orgs = [
     type: 'Government Tertiary Hospital',
     description:
         'Largest hospital in Northern Pakistan (1,500 beds). 24/7 emergency, trauma, and ICU.',
-    initials: 'AT',
+    initials: 'assets/logos/AT.webp',
     phones: [
       PhoneEntry('Main Line', '09929311154'),
       PhoneEntry('Alt. Line', '09929311155'),
@@ -56,7 +45,7 @@ const List<Organization> _orgs = [
     type: 'Government District Hospital',
     description:
         'District HQ Hospital with 24/7 emergency and OPD services for Abbottabad district.',
-    initials: 'BH',
+    initials: 'assets/logos/BH.webp',
     phones: [
       PhoneEntry('Main', '0992333739'),
       PhoneEntry('Alt. 1', '09929310198'),
@@ -64,32 +53,23 @@ const List<Organization> _orgs = [
     ],
   ),
   Organization(
-    name: 'INOR — Nuclear Medicine & Oncology',
+    name: 'INOR Nuclear Medicine & Oncology',
     type: 'Specialized Government Hospital',
     description:
         'Located within Ayub Medical Complex. Advanced oncology and diagnostics for the Hazara region.',
-    initials: 'IN',
+    initials: 'assets/logos/IN.webp',
     phones: [
       PhoneEntry('Main', '0992383149'),
       PhoneEntry('Alt.', '0992385462'),
     ],
   ),
-  Organization(
-    name: 'Bach Christian Hospital',
-    type: 'Private / Mission Hospital',
-    description:
-        'Long-established private hospital with emergency and surgical services in Hazara.',
-    initials: 'BC',
-    phones: [PhoneEntry('Main', '0992370007')],
-  ),
-
   // NGOs
   Organization(
-    name: 'Al-Khidmat Foundation — KPK',
+    name: 'Al-Khidmat Foundation KPK',
     type: 'NGO / Humanitarian',
     description:
         'Active in disaster management, health, and clean water. Deployed in 2005 earthquake and floods.',
-    initials: 'AK',
+    initials: 'assets/logos/Alkhidmat_Logo.webp',
     phones: [
       PhoneEntry('KPK Office', '0912263651'),
       PhoneEntry('KPK Office Alt.', '0912263652'),
@@ -100,7 +80,7 @@ const List<Organization> _orgs = [
     type: 'Local NGO',
     description:
         'Abbottabad-based NGO providing community welfare and disaster humanitarian support.',
-    initials: 'RD',
+    initials: 'assets/logos/Rural_Development_Organization.webp',
     phones: [PhoneEntry('Office', '03319109040')],
   ),
   Organization(
@@ -108,18 +88,18 @@ const List<Organization> _orgs = [
     type: 'PCP-Certified NGO',
     description:
         'Certified relief NGO providing shelter, livelihood, and disaster response in the Hazara region.',
-    initials: 'SD',
+    initials: 'assets/logos/Saibaan_Organiztion_Logo.webp',
     phones: [
       PhoneEntry('Office Line 1', '0997440528'),
       PhoneEntry('Office Line 2', '0997440529'),
     ],
   ),
   Organization(
-    name: 'PIRC — Rehabilitation & Community Development',
+    name: 'PIRC Rehabilitation & Community Development',
     type: 'Rehabilitation NGO',
     description:
         'Abbottabad-based NGO for rehabilitation and support for disaster-affected communities.',
-    initials: 'PI',
+    initials: 'assets/logos/Pak_Irish_Center_Logo.webp',
     phones: [PhoneEntry('Tel', '0992414465')],
   ),
 ];
@@ -128,15 +108,18 @@ class OfflineConnectivity extends StatelessWidget {
   const OfflineConnectivity({super.key});
 
   Future<void> _call(BuildContext context, String number) async {
-    final uri = Uri.parse('tel:$number');
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
-        context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Could not call $number'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+    try {
+      final dialer = await DirectDialer.instance;
+      await dialer.dial(number);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to dial: $number'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
@@ -191,14 +174,6 @@ class OfflineConnectivity extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.primaryMaroon,
-                        AppColors.primaryMaroon.withOpacity(0.7),
-                      ],
-                    ),
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
@@ -209,13 +184,13 @@ class OfflineConnectivity extends StatelessWidget {
                     ],
                   ),
                   child: Center(
-                    child: Text(
-                      org.initials,
-                      style: const TextStyle(
-                        fontFamily: 'SFPro',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: AppColors.white,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        org.initials,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),

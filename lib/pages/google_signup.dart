@@ -31,10 +31,8 @@ class GoogleSignup extends StatelessWidget {
                         ),
 
                         child: Image.asset(
-                          'assets/images/app_bg_removed.png',
-
+                          'assets/images/app_bg_removed.webp',
                           width: 100,
-
                           height: 100,
                         ),
                       ),
@@ -90,7 +88,7 @@ class GoogleSignup extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
                     child: Image.asset(
-                      'assets/images/community_join_image.jpeg',
+                      'assets/images/community_join_image.webp',
                       fit: BoxFit.cover,
                     ),
                   ),

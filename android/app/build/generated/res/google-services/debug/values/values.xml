@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_web_client_id" translatable="false">909144850972-c1u0ut6cdqibfkmbcgj5nd6r3jevfhk4.apps.googleusercontent.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">909144850972</string>
+    <string name="google_api_key" translatable="false">AIzaSyDxYe-nH3pXUrSg4djqulFbtinb9ITVzys</string>
+    <string name="google_app_id" translatable="false">1:909144850972:android:3953621a9efff1297c55d9</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyDxYe-nH3pXUrSg4djqulFbtinb9ITVzys</string>
+    <string name="google_storage_bucket" translatable="false">life-line-victim-27aaa.firebasestorage.app</string>
+    <string name="project_id" translatable="false">life-line-victim-27aaa</string>
+</resources>
