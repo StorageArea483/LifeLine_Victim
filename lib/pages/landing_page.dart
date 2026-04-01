@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line/models/flood_data.dart';
+import 'package:life_line/pages/chat_bot.dart';
 import 'package:life_line/providers/landing_page_providers.dart';
 import 'package:life_line/services/auth_service.dart';
 import 'package:life_line/styles/styles.dart';
@@ -393,7 +394,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                 : () async {
                   switch (label) {
                     case 'Flood':
-                      await _handleFloodCheck();
+                      await _handleFloodCheck(label);
                       break;
                     case 'Accident':
                       break;
@@ -450,8 +451,10 @@ class _LandingPageState extends ConsumerState<LandingPage>
     );
   }
 
-  Future<void> _handleFloodCheck() async {
-    ref.read(landingPageProvider.notifier).setActiveButton('Flood');
+  Future<void> _handleFloodCheck(String label) async {
+    if (mounted) {
+      ref.read(landingPageProvider.notifier).setActiveButton(label);
+    }
 
     try {
       final locationResult = await fetchLatLong();
@@ -492,7 +495,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
       if (mounted) {
         FloodService.showFloodRisk(context, floodData);
-        _showSeverityDialog(floodData.riskLevel);
+        _showSeverityDialog(floodData.riskLevel, label);
       }
     } catch (e) {
       if (mounted) {
@@ -508,7 +511,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
     }
   }
 
-  void _showSeverityDialog(String severity) {
+  void _showSeverityDialog(String severity, String label) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -605,7 +608,9 @@ class _LandingPageState extends ConsumerState<LandingPage>
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {
-                          Navigator.of(context).pop();
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                          }
                         },
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -630,13 +635,15 @@ class _LandingPageState extends ConsumerState<LandingPage>
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
+                          if (!mounted) return;
                           Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Chatbot feature coming soon!'),
-                              backgroundColor: AppColors.info,
-                            ),
-                          );
+                          if (mounted) {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (context) => ChatBot(request: label),
+                              ),
+                            );
+                          }
                         },
                         style: AppButtons.primary.copyWith(
                           padding: const WidgetStatePropertyAll(

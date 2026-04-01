@@ -18,6 +18,7 @@ dependencies:
   google_sign_in: ^7.2.0
   connectivity_plus: ^6.1.5
   direct_dialer: ^2.0.1
+  web_socket_channel: ^3.0.3
   
   #For OpenStreetMap
   latlong2: ^0.9.1
@@ -26,6 +27,7 @@ dependencies:
   location: ^8.0.1
   http: ^1.6.0
   flutter_polyline_points: ^3.1.0
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:

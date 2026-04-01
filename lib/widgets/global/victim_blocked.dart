@@ -91,12 +91,15 @@ class VictimBlocked extends StatelessWidget {
                     height: 48,
                     child: ElevatedButton(
                       style: AppButtons.submit,
-                      onPressed:
-                          () => Navigator.of(context).pushReplacement(
+                      onPressed: () {
+                        if (context.mounted) {
+                          Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                               builder: (context) => const GoogleSignup(),
                             ),
-                          ),
+                          );
+                        }
+                      },
                       child: const Text('Return to SignUp page'),
                     ),
                   ),

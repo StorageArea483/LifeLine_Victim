@@ -94,18 +94,20 @@ class FloodService {
             ? data.errorMessage ?? 'Unknown error'
             : '${data.riskLevel}  •  Rain: ${data.rainMm} mm/hr';
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(icon, color: Colors.white),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(icon, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          backgroundColor: bgColor,
+          duration: const Duration(seconds: 5),
         ),
-        backgroundColor: bgColor,
-        duration: const Duration(seconds: 5),
-      ),
-    );
+      );
+    }
   }
 }
