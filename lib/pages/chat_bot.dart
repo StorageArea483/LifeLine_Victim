@@ -45,33 +45,39 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   void _initializeWebSocket() {
     try {
       _channel = WebSocketChannel.connect(Uri.parse(GptClient.gptUrl));
+      final StringBuffer responseBuffer = StringBuffer();
 
       _channel!.stream.listen(
         (data) {
           if (!mounted) return;
-
-          try {
-            final response = data.toString();
-            ref
-                .read(chatPageProvider.notifier)
-                .addMessage(Message(text: response, isUser: false));
-            ref.read(chatPageProvider.notifier).setLoading(false);
-            _scrollToBottom();
-          } catch (e) {
-            _handleError('Error processing response: $e');
-          }
-        },
-        onError: (error) {
-          _handleError('Connection error: $error');
+          // Accumulate each incoming chunk
+          responseBuffer.write(data.toString());
         },
         onDone: () {
-          if (mounted) {
-            _handleError('Connection closed unexpectedly');
+          // Stream closed by server — full message received
+          if (!mounted) return;
+          final fullMessage = responseBuffer.toString().trim();
+          if (fullMessage.isNotEmpty && mounted) {
+            ref
+                .read(chatPageProvider.notifier)
+                .addMessage(Message(text: fullMessage, isUser: false));
           }
+          if (mounted) {
+            ref.read(chatPageProvider.notifier).setLoading(false);
+          }
+          _scrollToBottom();
+          responseBuffer.clear();
+          // Reset channel so next message creates a fresh connection
+          _channel = null;
+        },
+        onError: (error) {
+          _handleError('Connection error');
+          responseBuffer.clear();
+          _channel = null;
         },
       );
     } catch (e) {
-      _handleError('Failed to connect: $e');
+      _handleError('Failed to connect to Assistant, please retry');
     }
   }
 
@@ -120,7 +126,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
       _channel?.sink.add(jsonEncode(message));
     } catch (e) {
-      _handleError('Failed to send message: $e');
+      _handleError('Failed to send message');
     }
   }
 

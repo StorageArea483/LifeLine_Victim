@@ -15,7 +15,7 @@ class GoogleAuthentication extends StatelessWidget {
     final isLoading = ref.watch(isLoadingStateProvider);
     return ElevatedButton(
       onPressed: isLoading ? null : () => _handleGoogleSignIn(context, ref),
-      style: AppButtons.primary,
+      style: AppButtons.dialogAgree,
       child:
           isLoading
               ? const SizedBox(
