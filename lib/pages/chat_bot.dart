@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:life_line/pages/landing_page.dart';
+import 'package:life_line/widgets/global/bottom_navbar.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:life_line/config/gpt_client.dart';
 import 'package:life_line/providers/chat_bot_provider.dart';
@@ -9,9 +11,9 @@ import 'package:life_line/styles/styles.dart';
 import 'package:life_line/models/message.dart';
 
 class ChatBot extends ConsumerStatefulWidget {
-  final String request; // "flood", "earthquake", "medical"
+  final String? request; // "flood", "earthquake", "medical"
 
-  const ChatBot({super.key, required this.request});
+  const ChatBot({super.key, this.request});
 
   @override
   ConsumerState<ChatBot> createState() => _ChatBotState();
@@ -83,18 +85,22 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
   void _sendInitialMessage() {
     String initialMessage;
-    switch (widget.request.toLowerCase()) {
-      case 'flood':
-        initialMessage = 'I am in a flood situation';
-        break;
-      case 'earthquake':
-        initialMessage = 'There has been an earthquake';
-        break;
-      case 'medical':
-        initialMessage = 'I need medical help';
-        break;
-      default:
-        initialMessage = 'I need help';
+    if (widget.request == null) {
+      return;
+    } else {
+      switch (widget.request!.toLowerCase()) {
+        case 'flood':
+          initialMessage = 'I am in a flood situation';
+          break;
+        case 'earthquake':
+          initialMessage = 'There has been an earthquake';
+          break;
+        case 'medical':
+          initialMessage = 'I need medical help';
+          break;
+        default:
+          initialMessage = 'I need help';
+      }
     }
     _sendMessage(initialMessage);
   }
@@ -104,13 +110,13 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     final isLoading = ref.read(chatPageProvider).isLoading;
     if (text.trim().isEmpty || isLoading) return;
 
-    if (!mounted) return;
-    ref
-        .read(chatPageProvider.notifier)
-        .addMessage(Message(text: text, isUser: true));
-    if (!mounted) return;
-    ref.read(chatPageProvider.notifier).setLoading(true);
-    _scrollToBottom();
+    if (mounted) {
+      ref
+          .read(chatPageProvider.notifier)
+          .addMessage(Message(text: text, isUser: true));
+      ref.read(chatPageProvider.notifier).setLoading(true);
+      _scrollToBottom();
+    }
 
     try {
       if (_channel == null) {
@@ -132,11 +138,12 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
   void _handleError(String errorMessage) {
     if (!mounted) return;
-    ref
-        .read(chatPageProvider.notifier)
-        .addMessage(Message(text: errorMessage, isUser: false));
-    if (!mounted) return;
-    ref.read(chatPageProvider.notifier).setLoading(false);
+    if (mounted) {
+      ref
+          .read(chatPageProvider.notifier)
+          .addMessage(Message(text: errorMessage, isUser: false));
+      ref.read(chatPageProvider.notifier).setLoading(false);
+    }
 
     if (_channel != null) {
       _channel?.sink.close();
@@ -173,6 +180,73 @@ class _ChatBotState extends ConsumerState<ChatBot> {
         elevation: 0,
         title: const Text('Emergency Assistant', style: AppText.appHeader),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: AppColors.textPrimary,
+          ),
+          onPressed:
+              () => Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const LandingPage()),
+              ),
+        ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: AppColors.surfaceLight,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                builder: (context) {
+                  return SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Drag handle
+                          Container(
+                            width: 36,
+                            height: 4,
+                            margin: const EdgeInsets.only(bottom: 20),
+                            decoration: BoxDecoration(
+                              color: AppColors.borderColor,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                            ),
+                            title: const Text(
+                              'Clear all messages',
+                              style: TextStyle(
+                                fontFamily: 'SFPro',
+                                fontSize: 14,
+                                color: Colors.red,
+                              ),
+                            ),
+                            onTap: () {
+                              ref
+                                  .read(chatPageProvider.notifier)
+                                  .clearMessages();
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+            icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -181,17 +255,57 @@ class _ChatBotState extends ConsumerState<ChatBot> {
               final messages = ref.watch(
                 chatPageProvider.select((v) => v.messages),
               );
-              return Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(16),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    return _buildMessageBubble(message);
-                  },
-                ),
-              );
+              return messages.isEmpty
+                  ? Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 20,
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              size: 64,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No messages yet',
+                              style: AppText.fieldLabel.copyWith(
+                                fontWeight: FontWeight.w600,
+
+                                color: AppColors.darkCharcoal,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Send a message to Emergency assistant and tell them what medical services you need',
+                              style: AppText.small.copyWith(
+                                color: AppColors.textSecondary,
+                                height: 1.3,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                  : Expanded(
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final message = messages[index];
+                        return _buildMessageBubble(message);
+                      },
+                    ),
+                  );
             },
           ),
           Consumer(
@@ -241,6 +355,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
           _buildInputArea(),
         ],
       ),
+      bottomNavigationBar: const BottomNavbar(currentIndex: 2),
     );
   }
 
@@ -343,7 +458,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                 ),
                 child: TextField(
                   controller: _controller,
-                  enabled: !ref.read(chatPageProvider).isLoading,
                   decoration: InputDecoration(
                     hintText: 'Type your message...',
                     hintStyle: AppText.small.copyWith(
@@ -385,8 +499,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                 ],
               ),
               child: IconButton(
-                onPressed:
-                    ref.read(chatPageProvider).isLoading ? null : _handleSend,
+                onPressed: _handleSend,
                 icon: const Icon(Icons.send, color: AppColors.white),
                 iconSize: 20,
               ),

@@ -305,10 +305,29 @@ class _LandingPageState extends ConsumerState<LandingPage>
                             style: AppText.fieldLabel.copyWith(fontSize: 15),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            'Get instant safety and first aid tips.',
-                            style: AppText.small.copyWith(
-                              color: AppColors.textSecondary,
+                          TextButton(
+                            onPressed: () {
+                              if (mounted) {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) =>
+                                            const ChatBot(request: 'Medical'),
+                                  ),
+                                );
+                              }
+                            },
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Get instant safety and first aid tips.',
+                                    style: AppText.small.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -368,7 +387,6 @@ class _LandingPageState extends ConsumerState<LandingPage>
                   ],
                 ),
               ),
-
               const SizedBox(height: 32),
             ],
           ),

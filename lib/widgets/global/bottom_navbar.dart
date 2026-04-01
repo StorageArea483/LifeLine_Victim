@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:life_line/pages/chat_bot.dart';
 import 'package:life_line/pages/landing_page.dart';
 import 'package:life_line/styles/styles.dart';
+import 'package:life_line/widgets/features/maps_module/share_location.dart';
 
 class BottomNavbar extends StatelessWidget {
   final int currentIndex;
@@ -19,10 +21,14 @@ class BottomNavbar extends StatelessWidget {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const LandingPage()),
           );
-        } else if (index == 1) {
-          // Navigate to map
-        } else if (index == 2) {
-          // Navigate to profile
+        } else if (index == 1 && context.mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const ShareLocation()),
+          );
+        } else if (index == 2 && context.mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const ChatBot()),
+          );
         }
       },
       type: BottomNavigationBarType.fixed,

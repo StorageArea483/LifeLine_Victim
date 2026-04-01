@@ -8,6 +8,10 @@ class ChatPageNotifier extends StateNotifier<ChatPageState> {
     state = state.copyWith(messages: [...state.messages, message]);
   }
 
+  void clearMessages() {
+    state = state.copyWith(messages: []);
+  }
+
   void setLoading(bool loading) {
     state = state.copyWith(isLoading: loading);
   }
