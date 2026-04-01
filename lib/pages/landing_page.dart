@@ -327,6 +327,11 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                     ),
                                   ),
                                 ),
+                                const Icon(
+                                  Icons.chevron_right,
+                                  color: AppColors.textSecondary,
+                                  size: 20,
+                                ),
                               ],
                             ),
                           ),
