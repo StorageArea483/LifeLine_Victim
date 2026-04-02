@@ -10,6 +10,7 @@ class InternetConnection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!context.mounted) return const SizedBox.shrink();
     final connectionState = ref.watch(internetProvider);
     return connectionState.when(
       skipLoadingOnRefresh: false,

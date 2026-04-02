@@ -72,6 +72,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                   children: [
                     Consumer(
                       builder: (context, ref, child) {
+                        if (!mounted) return const SizedBox.shrink();
                         final showEmergencyOptions = ref.watch(
                           landingPageProvider.select(
                             (v) => v.showEmergencyOptions,
@@ -95,6 +96,9 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                 padding: const EdgeInsets.only(bottom: 24),
                                 child: Consumer(
                                   builder: (context, ref, child) {
+                                    if (!mounted) {
+                                      return const SizedBox.shrink();
+                                    }
                                     final activeButton = ref.watch(
                                       landingPageProvider.select(
                                         (v) => v.activeButton,
@@ -303,6 +307,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                           Text(
                             'Quick First Aid',
                             style: AppText.fieldLabel.copyWith(fontSize: 15),
+                            textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 4),
                           TextButton(
@@ -330,7 +335,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                 const Icon(
                                   Icons.chevron_right,
                                   color: AppColors.textSecondary,
-                                  size: 20,
+                                  size: 25,
                                 ),
                               ],
                             ),

@@ -11,9 +11,9 @@ import 'package:life_line/styles/styles.dart';
 import 'package:life_line/models/message.dart';
 
 class ChatBot extends ConsumerStatefulWidget {
-  final String? request; // "flood", "earthquake", "medical"
+  final String request; // "flood", "earthquake", "medical"
 
-  const ChatBot({super.key, this.request});
+  const ChatBot({super.key, required this.request});
 
   @override
   ConsumerState<ChatBot> createState() => _ChatBotState();
@@ -63,8 +63,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
             ref
                 .read(chatPageProvider.notifier)
                 .addMessage(Message(text: fullMessage, isUser: false));
-          }
-          if (mounted) {
             ref.read(chatPageProvider.notifier).setLoading(false);
           }
           _scrollToBottom();
@@ -85,22 +83,18 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
   void _sendInitialMessage() {
     String initialMessage;
-    if (widget.request == null) {
-      return;
-    } else {
-      switch (widget.request!.toLowerCase()) {
-        case 'flood':
-          initialMessage = 'I am in a flood situation';
-          break;
-        case 'earthquake':
-          initialMessage = 'There has been an earthquake';
-          break;
-        case 'medical':
-          initialMessage = 'I need medical help';
-          break;
-        default:
-          initialMessage = 'I need help';
-      }
+    switch (widget.request.toLowerCase()) {
+      case 'flood':
+        initialMessage = widget.request;
+        break;
+      case 'earthquake':
+        initialMessage = widget.request;
+        break;
+      case 'medical':
+        initialMessage = widget.request;
+        break;
+      default:
+        initialMessage = 'I need help';
     }
     _sendMessage(initialMessage);
   }
@@ -137,7 +131,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   }
 
   void _handleError(String errorMessage) {
-    if (!mounted) return;
     if (mounted) {
       ref
           .read(chatPageProvider.notifier)
@@ -163,12 +156,77 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     });
   }
 
+  void _handleOptionTap(String option) {
+    if (option.toLowerCase() == 'other' && mounted) {
+      // Enable text field for custom input
+      ref.read(chatPageProvider.notifier).setIsWaitingForOtherInput(true);
+      // Focus on text field for custom input
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        FocusScope.of(context).requestFocus(FocusNode());
+      });
+      return;
+    }
+
+    // Send the selected option as a message
+    if (option.isNotEmpty) {
+      _sendMessage(option);
+    }
+
+    // Move to next step
+    if (mounted) {
+      ref.read(chatPageProvider.notifier).incrementCurrentStep();
+    }
+    // Scroll to bottom after selection
+    _scrollToBottom();
+  }
+
   void _handleSend() {
     final text = _controller.text.trim();
-    if (text.isNotEmpty) {
+    if (text.isNotEmpty && mounted) {
       _controller.clear();
       _sendMessage(text);
+      // Reset the waiting for other input state
+      ref.read(chatPageProvider.notifier).setIsWaitingForOtherInput(false);
+      // If user typed a custom answer, move to next step
+      if (mounted) {
+        ref.read(chatPageProvider.notifier).incrementCurrentStep();
+      }
     }
+  }
+
+  bool _isTextFieldEnabled(WidgetRef ref) {
+    // Always enable for medical mode
+    if (widget.request.toLowerCase() == 'medical') {
+      return true;
+    }
+
+    // Enable if waiting for "Other" input
+    if (mounted && ref.read(chatPageProvider).isWaitingForOtherInput) {
+      return true;
+    }
+
+    // Enable if current step has empty options (location step)
+    List<List<String>> answerOptions;
+    switch (widget.request.toLowerCase()) {
+      case 'flood':
+        answerOptions = GptClient.floodAnswers;
+        break;
+      case 'earthquake':
+        answerOptions = GptClient.earthquakeAnswers;
+        break;
+      default:
+        return true;
+    }
+    if (!mounted) return false;
+    final currentStep = ref.watch(
+      chatPageProvider.select((v) => v.currentStep),
+    );
+    if (currentStep < answerOptions.length) {
+      final options = answerOptions[currentStep];
+      return options.isEmpty; // Enable if no options (location step)
+    }
+
+    return false;
   }
 
   @override
@@ -231,9 +289,15 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                               ),
                             ),
                             onTap: () {
-                              ref
-                                  .read(chatPageProvider.notifier)
-                                  .clearMessages();
+                              if (mounted) {
+                                ref
+                                    .read(chatPageProvider.notifier)
+                                    .clearMessages();
+                                // Reset the waiting for other input state
+                                ref
+                                    .read(chatPageProvider.notifier)
+                                    .setIsWaitingForOtherInput(false);
+                              }
                               Navigator.pop(context);
                             },
                           ),
@@ -252,6 +316,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
         children: [
           Consumer(
             builder: (context, ref, child) {
+              if (!mounted) return const SizedBox.shrink();
               final messages = ref.watch(
                 chatPageProvider.select((v) => v.messages),
               );
@@ -277,7 +342,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                               'No messages yet',
                               style: AppText.fieldLabel.copyWith(
                                 fontWeight: FontWeight.w600,
-
                                 color: AppColors.darkCharcoal,
                               ),
                             ),
@@ -302,7 +366,9 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                       itemCount: messages.length,
                       itemBuilder: (context, index) {
                         final message = messages[index];
-                        return _buildMessageBubble(message);
+                        final isLastBotMessage =
+                            !message.isUser && index == messages.length - 1;
+                        return _buildMessageBubble(message, isLastBotMessage);
                       },
                     ),
                   );
@@ -310,6 +376,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
           ),
           Consumer(
             builder: (context, ref, child) {
+              if (!mounted) return const SizedBox.shrink();
               final isLoading = ref.watch(
                 chatPageProvider.select((v) => v.isLoading),
               );
@@ -359,76 +426,188 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     );
   }
 
-  Widget _buildMessageBubble(Message message) {
+  Widget _buildMessageBubble(Message message, bool isLastBotMessage) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment:
-            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      child: Column(
+        crossAxisAlignment:
+            message.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          if (!message.isUser) ...[
-            // Bot avatar
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.primaryMaroon.withOpacity(0.1),
-              child: ClipOval(
-                child: Image.asset(
-                  'assets/images/robo_head.webp',
-                  width: 24,
-                  height: 24,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
-              decoration: BoxDecoration(
-                color:
-                    message.isUser
-                        ? AppColors.primaryMaroon
-                        : AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: AppColors.shadowLight,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
+          Row(
+            mainAxisAlignment:
+                message.isUser
+                    ? MainAxisAlignment.end
+                    : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (!message.isUser) ...[
+                // Bot avatar
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: AppColors.primaryMaroon.withOpacity(0.1),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/robo_head.webp',
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                ],
-              ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  fontFamily: 'SFPro',
-                  fontSize: 14,
-                  height: 1.4,
-                  color:
-                      message.isUser ? AppColors.white : AppColors.darkCharcoal,
+                ),
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.75,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        message.isUser
+                            ? AppColors.primaryMaroon
+                            : AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: AppColors.shadowLight,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    message.text,
+                    style: TextStyle(
+                      fontFamily: 'SFPro',
+                      fontSize: 14,
+                      height: 1.4,
+                      color:
+                          message.isUser
+                              ? AppColors.white
+                              : AppColors.darkCharcoal,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              if (message.isUser) ...[
+                const SizedBox(width: 8),
+                // User avatar
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: AppColors.primaryMaroon.withOpacity(0.1),
+                  child: const Icon(
+                    Icons.person,
+                    size: 20,
+                    color: AppColors.primaryMaroon,
+                  ),
+                ),
+              ],
+            ],
           ),
-          if (message.isUser) ...[
-            const SizedBox(width: 8),
-            // User avatar
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.primaryMaroon.withOpacity(0.1),
-              child: const Icon(
-                Icons.person,
-                size: 20,
-                color: AppColors.primaryMaroon,
-              ),
-            ),
-          ],
+          Consumer(
+            builder: (context, ref, child) {
+              final isLoading = ref.watch(
+                chatPageProvider.select((v) => v.isLoading),
+              );
+
+              // Show options only for the last bot message and when not loading
+              if (mounted &&
+                  !message.isUser &&
+                  isLastBotMessage &&
+                  !isLoading) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [const SizedBox(height: 8), _buildOptions(ref)],
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildOptions(WidgetRef ref) {
+    List<List<String>> answerOptions;
+    switch (widget.request.toLowerCase()) {
+      case 'flood':
+        answerOptions = GptClient.floodAnswers;
+        break;
+      case 'earthquake':
+        answerOptions = GptClient.earthquakeAnswers;
+        break;
+      default:
+        return const SizedBox.shrink();
+    }
+
+    // Get current step from provider
+    if (!mounted) return const SizedBox.shrink();
+    final currentStep = ref.watch(
+      chatPageProvider.select((v) => v.currentStep),
+    );
+
+    // Check if we have options for current step
+    if (currentStep >= answerOptions.length) {
+      return const SizedBox.shrink();
+    }
+
+    final options = answerOptions[currentStep];
+    if (options.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(left: 40), // Align with message bubble
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children:
+            options.map((option) {
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _handleOptionTap(option),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.softBackground,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.primaryMaroon.withOpacity(0.3),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.shadowLight.withOpacity(0.5),
+                          blurRadius: 3,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      option,
+                      style: const TextStyle(
+                        fontFamily: 'SFPro',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primaryMaroon,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
       ),
     );
   }
@@ -456,53 +635,63 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: AppColors.borderColor, width: 1),
                 ),
-                child: TextField(
-                  controller: _controller,
-                  decoration: InputDecoration(
-                    hintText: 'Type your message...',
-                    hintStyle: AppText.small.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
-                  style: const TextStyle(
-                    fontFamily: 'SFPro',
-                    fontSize: 14,
-                    color: AppColors.darkCharcoal,
-                  ),
-                  maxLines: null,
-                  textCapitalization: TextCapitalization.sentences,
-                  onSubmitted: (_) => _handleSend(),
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    return TextField(
+                      controller: _controller,
+                      enabled: _isTextFieldEnabled(ref),
+                      decoration: InputDecoration(
+                        hintText:
+                            _isTextFieldEnabled(ref)
+                                ? 'Type your message...'
+                                : 'Please select an option above',
+                        hintStyle: AppText.small.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                      style: const TextStyle(
+                        fontFamily: 'SFPro',
+                        fontSize: 14,
+                        color: AppColors.darkCharcoal,
+                      ),
+                      maxLines: null,
+                      textCapitalization: TextCapitalization.sentences,
+                    );
+                  },
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.primaryMaroon,
-                    AppColors.primaryMaroon.withOpacity(0.8),
-                  ],
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryMaroon.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+            Consumer(
+              builder: (context, ref, child) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color:
+                        _isTextFieldEnabled(ref)
+                            ? AppColors.primaryMaroon
+                            : AppColors.primaryMaroon.withOpacity(0.6),
+
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryMaroon.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: IconButton(
-                onPressed: _handleSend,
-                icon: const Icon(Icons.send, color: AppColors.white),
-                iconSize: 20,
-              ),
+                  child: IconButton(
+                    onPressed: _isTextFieldEnabled(ref) ? _handleSend : null,
+                    icon: const Icon(Icons.send, color: AppColors.white),
+                    iconSize: 20,
+                  ),
+                );
+              },
             ),
           ],
         ),

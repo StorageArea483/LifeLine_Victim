@@ -27,7 +27,9 @@ class BottomNavbar extends StatelessWidget {
           );
         } else if (index == 2 && context.mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const ChatBot()),
+            MaterialPageRoute(
+              builder: (context) => const ChatBot(request: 'Medical'),
+            ),
           );
         }
       },

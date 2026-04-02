@@ -20,7 +20,10 @@ class GptClient {
       "Other",
     ],
 
-    // Q4: Immediate dangers
+    // Q4: User Location
+    [],
+
+    // Q5: Immediate dangers
     [
       "No Danger",
       "Electricity",
@@ -40,7 +43,10 @@ class GptClient {
     // Q3: Building condition
     ["Safe", "Cracked", "Collapsed", "Other"],
 
-    // Q4: Immediate dangers
+    // Q4: User Location
+    [],
+
+    // Q5: Immediate dangers
     ["No Danger", "Fire", "Gas Leak", "Falling Debris", "Other"],
   ];
 
@@ -68,6 +74,7 @@ class GptClient {
       - Do NOT move to next question until user explains
       - If user does not answer the question, repeat the same question
       - Add "Please answer my question" when repeating
+      - Once Flood or Earthquake mode starts, finish all questions and create the report before switching mode
 
       ========================
       FLOOD MODE
@@ -112,7 +119,6 @@ class GptClient {
       • Location: [location]
       • Immediate Dangers: [details]
       • Victim Severity: [High / Moderate / Low]
-      ------------------------------
 
       Also:
       - If danger is high → advise: move to higher ground, avoid electricity
@@ -160,7 +166,6 @@ class GptClient {
       • Location: [location]
       • Immediate Dangers: [details]
       • Victim Severity: [High / Moderate / Low]
-      ------------------------------
 
       Also:
       - If unsafe → advise: move to open area, stay away from buildings

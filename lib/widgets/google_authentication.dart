@@ -12,6 +12,7 @@ class GoogleAuthentication extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!context.mounted) return const SizedBox.shrink();
     final isLoading = ref.watch(isLoadingStateProvider);
     return ElevatedButton(
       onPressed: isLoading ? null : () => _handleGoogleSignIn(context, ref),
