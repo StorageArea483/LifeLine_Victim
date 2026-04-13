@@ -10,6 +10,7 @@ class ChatPageNotifier extends StateNotifier<ChatPageState> {
           currentStep: 0,
           isWaitingForOtherInput: false,
           detectedRequest: null,
+          hasConnectionError: false,
         ),
       );
 
@@ -19,15 +20,6 @@ class ChatPageNotifier extends StateNotifier<ChatPageState> {
 
   void incrementCurrentStep() {
     state = state.copyWith(currentStep: state.currentStep + 1);
-  }
-
-  void clearMessages() {
-    state = state.copyWith(
-      messages: [],
-      currentStep: 0,
-      detectedRequest: null,
-      isWaitingForOtherInput: false,
-    );
   }
 
   void setLoading(bool loading) {
@@ -41,6 +33,10 @@ class ChatPageNotifier extends StateNotifier<ChatPageState> {
   void setDetectedRequest(String? request) {
     state = state.copyWith(detectedRequest: request);
   }
+
+  void setHasConnectionError(bool hasError) {
+    state = state.copyWith(hasConnectionError: hasError);
+  }
 }
 
 class ChatPageState {
@@ -49,6 +45,7 @@ class ChatPageState {
   final int currentStep;
   final bool isWaitingForOtherInput;
   final String? detectedRequest;
+  final bool hasConnectionError;
 
   ChatPageState({
     this.messages = const [],
@@ -56,6 +53,7 @@ class ChatPageState {
     this.currentStep = 0,
     this.isWaitingForOtherInput = false,
     this.detectedRequest,
+    this.hasConnectionError = false,
   });
 
   ChatPageState copyWith({
@@ -64,6 +62,7 @@ class ChatPageState {
     int? currentStep,
     bool? isWaitingForOtherInput,
     String? detectedRequest,
+    bool? hasConnectionError,
   }) {
     return ChatPageState(
       messages: messages ?? this.messages,
@@ -72,6 +71,7 @@ class ChatPageState {
       isWaitingForOtherInput:
           isWaitingForOtherInput ?? this.isWaitingForOtherInput,
       detectedRequest: detectedRequest ?? this.detectedRequest,
+      hasConnectionError: hasConnectionError ?? this.hasConnectionError,
     );
   }
 }
