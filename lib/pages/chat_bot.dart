@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,11 +10,12 @@ import 'package:life_line/providers/chat_bot_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/models/message.dart';
+import 'dart:developer';
 
 class ChatBot extends ConsumerStatefulWidget {
-  final String request; // "flood", "earthquake", "medical"
+  final String? request; // "flood", "earthquake", "medical"
 
-  const ChatBot({super.key, required this.request});
+  const ChatBot({super.key, this.request});
 
   @override
   ConsumerState<ChatBot> createState() => _ChatBotState();
@@ -22,7 +24,7 @@ class ChatBot extends ConsumerStatefulWidget {
 class _ChatBotState extends ConsumerState<ChatBot> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final String _chatId = const Uuid().v4();
+  String _chatId = const Uuid().v4();
   WebSocketChannel? _channel;
 
   @override
@@ -46,6 +48,12 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
   void _initializeWebSocket() {
     try {
+      // Close existing connection if any
+      if (_channel != null) {
+        _channel?.sink.close();
+        _channel = null;
+      }
+
       _channel = WebSocketChannel.connect(Uri.parse(GptClient.gptUrl));
       final StringBuffer responseBuffer = StringBuffer();
 
@@ -82,21 +90,60 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   }
 
   void _sendInitialMessage() {
+    if (widget.request == null) {
+      return; // Don't send initial message if no request specified
+    }
+
     String initialMessage;
-    switch (widget.request.toLowerCase()) {
+    switch (widget.request!.toLowerCase()) {
       case 'flood':
-        initialMessage = widget.request;
+        initialMessage = 'I am in a flood situation';
         break;
       case 'earthquake':
-        initialMessage = widget.request;
+        initialMessage = 'There has been an earthquake';
         break;
       case 'medical':
-        initialMessage = widget.request;
+        initialMessage = 'I need medical help';
         break;
       default:
         initialMessage = 'I need help';
     }
     _sendMessage(initialMessage);
+  }
+
+  // Method to detect request type from user message using regex
+  String? _detectRequestFromMessage(String message) {
+    final lowerMessage = message.toLowerCase();
+    log('Testing message: "$lowerMessage"');
+
+    // Regex patterns for flood-related keywords
+    final floodPattern = RegExp(
+      r'\b(flood|flooding|flooded|water|drowning|submerged|inundated|deluge)\b',
+    );
+
+    // Regex patterns for earthquake-related keywords
+    final earthquakePattern = RegExp(
+      r'\b(earthquake|quake|tremor|seismic|shaking|aftershock|epicenter|magnitude)\b',
+    );
+
+    // Regex patterns for medical-related keywords
+    final medicalPattern = RegExp(
+      r'\b(medical|health|injury|injured|hurt|pain|sick|illness|emergency|ambulance|doctor|hospital)\b',
+    );
+
+    if (floodPattern.hasMatch(lowerMessage)) {
+      log('Flood pattern matched!');
+      return 'flood';
+    } else if (earthquakePattern.hasMatch(lowerMessage)) {
+      log('Earthquake pattern matched!');
+      return 'earthquake';
+    } else if (medicalPattern.hasMatch(lowerMessage)) {
+      log('Medical pattern matched!');
+      return 'medical';
+    }
+
+    log('No pattern matched');
+    return null;
   }
 
   Future<void> _sendMessage(String text) async {
@@ -172,8 +219,13 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       _sendMessage(option);
     }
 
-    // Move to next step
-    if (mounted) {
+    // Move to next step (only for flood/earthquake flows)
+    final currentRequest =
+        widget.request ?? ref.read(chatPageProvider).detectedRequest;
+    if (mounted &&
+        currentRequest != null &&
+        (currentRequest.toLowerCase() == 'flood' ||
+            currentRequest.toLowerCase() == 'earthquake')) {
       ref.read(chatPageProvider.notifier).incrementCurrentStep();
     }
     // Scroll to bottom after selection
@@ -186,17 +238,40 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       _controller.clear();
       _sendMessage(text);
       // Reset the waiting for other input state
-      ref.read(chatPageProvider.notifier).setIsWaitingForOtherInput(false);
-      // If user typed a custom answer, move to next step
       if (mounted) {
+        ref.read(chatPageProvider.notifier).setIsWaitingForOtherInput(false);
+      }
+      String? detected;
+      // Detect request type from user message if not already set
+      if (widget.request == null &&
+          ref.read(chatPageProvider).detectedRequest == null) {
+        detected = _detectRequestFromMessage(text);
+        if (detected != null) {
+          ref
+              .read(chatPageProvider.notifier)
+              .setDetectedRequest(detected); // flood/earthquake
+        }
+      }
+      final currentRequest = detected;
+      log('Current Result Value: $currentRequest');
+      if (mounted &&
+          currentRequest != null &&
+          (currentRequest.toLowerCase() == 'flood' ||
+              currentRequest.toLowerCase() == 'earthquake')) {
         ref.read(chatPageProvider.notifier).incrementCurrentStep();
+        log('Step incremented!');
       }
     }
   }
 
   bool _isTextFieldEnabled(WidgetRef ref) {
-    // Always enable for medical mode
-    if (widget.request.toLowerCase() == 'medical') {
+    // Get the effective request (widget.request has priority over detectedRequest)
+    final detectedRequest = ref.read(chatPageProvider).detectedRequest;
+    final currentRequest = widget.request ?? detectedRequest;
+    log('Request in isTextFieldEnabled: $currentRequest');
+
+    // Always enable for medical mode or if no request detected yet
+    if (currentRequest == null || currentRequest.toLowerCase() == 'medical') {
       return true;
     }
 
@@ -207,7 +282,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
     // Enable if current step has empty options (location step)
     List<List<String>> answerOptions;
-    switch (widget.request.toLowerCase()) {
+    switch (currentRequest.toLowerCase()) {
       case 'flood':
         answerOptions = GptClient.floodAnswers;
         break;
@@ -243,10 +318,13 @@ class _ChatBotState extends ConsumerState<ChatBot> {
             Icons.arrow_back_ios_new,
             color: AppColors.textPrimary,
           ),
-          onPressed:
-              () => Navigator.of(context).pushReplacement(
+          onPressed: () {
+            if (mounted) {
+              Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (context) => const LandingPage()),
-              ),
+              );
+            }
+          },
         ),
         actions: [
           IconButton(
@@ -292,13 +370,15 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                               if (mounted) {
                                 ref
                                     .read(chatPageProvider.notifier)
-                                    .clearMessages();
-                                // Reset the waiting for other input state
-                                ref
-                                    .read(chatPageProvider.notifier)
-                                    .setIsWaitingForOtherInput(false);
+                                    .setDetectedRequest(null);
+                                // Generate new chatId to start fresh conversation
+                                _chatId = const Uuid().v4();
+                                // Invalidate provider to reset all state
+                                ref.invalidate(chatPageProvider);
                               }
-                              Navigator.pop(context);
+                              if (mounted) {
+                                Navigator.pop(context);
+                              }
                             },
                           ),
                         ],
@@ -396,19 +476,24 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                               color: AppColors.surfaceLight,
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.primaryMaroon,
+                                CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: AppColors.primaryMaroon
+                                      .withOpacity(0.1),
+                                  child: ClipOval(
+                                    child: Image.asset(
+                                      'assets/images/robo_head.webp',
+                                      width: 24,
+                                      height: 24,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
-                                SizedBox(width: 8),
-                                Text('Typing...', style: AppText.small),
+                                const SizedBox(width: 8),
+                                const Text('Typing...', style: AppText.small),
                               ],
                             ),
                           ),
@@ -510,15 +595,24 @@ class _ChatBotState extends ConsumerState<ChatBot> {
           ),
           Consumer(
             builder: (context, ref, child) {
+              if (!mounted) return const SizedBox.shrink();
               final isLoading = ref.watch(
                 chatPageProvider.select((v) => v.isLoading),
+              );
+              // Also watch detectedRequest to rebuild when it changes
+              log(
+                'Detected Request: ${ref.watch(chatPageProvider.select((v) => v.detectedRequest))}',
+              );
+              final detectedRequest = ref.watch(
+                chatPageProvider.select((v) => v.detectedRequest),
               );
 
               // Show options only for the last bot message and when not loading
               if (mounted &&
                   !message.isUser &&
                   isLastBotMessage &&
-                  !isLoading) {
+                  !isLoading &&
+                  detectedRequest != null) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [const SizedBox(height: 8), _buildOptions(ref)],
@@ -534,8 +628,21 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   }
 
   Widget _buildOptions(WidgetRef ref) {
+    // Get the effective request (widget.request has priority over detectedRequest)
+    final detectedRequest = ref.read(chatPageProvider).detectedRequest;
+    final currentRequest = widget.request ?? detectedRequest;
+
+    log(
+      '_buildOptions called - widget.request: ${widget.request}, detectedRequest: $detectedRequest, currentRequest: $currentRequest',
+    );
+
+    if (currentRequest == null) {
+      log('_buildOptions returning empty - no request');
+      return const SizedBox.shrink();
+    }
+
     List<List<String>> answerOptions;
-    switch (widget.request.toLowerCase()) {
+    switch (currentRequest.toLowerCase()) {
       case 'flood':
         answerOptions = GptClient.floodAnswers;
         break;
@@ -554,13 +661,21 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
     // Check if we have options for current step
     if (currentStep >= answerOptions.length) {
+      log(
+        '_buildOptions returning empty - step $currentStep >= ${answerOptions.length}',
+      );
       return const SizedBox.shrink();
     }
 
     final options = answerOptions[currentStep];
     if (options.isEmpty) {
+      log('_buildOptions returning empty - no options for step $currentStep');
       return const SizedBox.shrink();
     }
+
+    log(
+      '_buildOptions showing ${options.length} options for step $currentStep: $options',
+    );
 
     return Container(
       width: double.infinity,

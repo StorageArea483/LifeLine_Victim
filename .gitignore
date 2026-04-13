@@ -36,6 +36,7 @@ migrate_working_dir/
 # Symbolication related
 app.*.symbols
 
+
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile
