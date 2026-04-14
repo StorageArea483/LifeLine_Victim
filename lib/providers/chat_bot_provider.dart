@@ -22,6 +22,10 @@ class ChatPageNotifier extends StateNotifier<ChatPageState> {
     state = state.copyWith(currentStep: state.currentStep + 1);
   }
 
+  void decrementCurrentStep() {
+    state = state.copyWith(currentStep: state.currentStep - 1);
+  }
+
   void setLoading(bool loading) {
     state = state.copyWith(isLoading: loading);
   }
@@ -81,3 +85,7 @@ final chatPageProvider = StateNotifierProvider<ChatPageNotifier, ChatPageState>(
     return ChatPageNotifier();
   },
 );
+
+final chatClearedProvider = StateProvider.autoDispose<bool>((ref) {
+  return false;
+});

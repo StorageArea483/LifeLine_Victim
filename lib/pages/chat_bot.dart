@@ -8,6 +8,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:life_line/config/gpt_client.dart';
 import 'package:life_line/providers/chat_bot_provider.dart';
 import 'package:uuid/uuid.dart';
+
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/models/message.dart';
 
@@ -24,6 +25,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _textFocusNode = FocusNode();
+
   String _chatId = const Uuid().v4();
   WebSocketChannel? _channel;
 
@@ -66,10 +68,27 @@ class _ChatBotState extends ConsumerState<ChatBot> {
           if (!mounted) return;
           final fullMessage = responseBuffer.toString().trim();
           if (fullMessage.isNotEmpty && mounted) {
-            ref
-                .read(chatPageProvider.notifier)
-                .addMessage(Message(text: fullMessage, isUser: false));
-            ref.read(chatPageProvider.notifier).setLoading(false);
+            final isRetry = RegExp(
+              r'please answer my question',
+              caseSensitive: false,
+            ).hasMatch(fullMessage);
+            if (!mounted) return;
+            final currentRequest =
+                widget.request ?? ref.read(chatPageProvider).detectedRequest;
+            final isStructured =
+                currentRequest != null &&
+                (currentRequest.toLowerCase() == 'flood' ||
+                    currentRequest.toLowerCase() == 'earthquake');
+
+            if (mounted) {
+              if (isRetry && isStructured) {
+                ref.read(chatPageProvider.notifier).decrementCurrentStep();
+              }
+              ref
+                  .read(chatPageProvider.notifier)
+                  .addMessage(Message(text: fullMessage, isUser: false));
+              ref.read(chatPageProvider.notifier).setLoading(false);
+            }
           }
           _scrollToBottom();
           responseBuffer.clear();
@@ -103,6 +122,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       default:
         initialMessage = 'I need help';
     }
+
     _sendMessage(initialMessage);
   }
 
@@ -148,14 +168,12 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       if (_channel == null) {
         _initializeWebSocket();
       }
-
       final message = {
         'chatId': _chatId,
         'appId': 'space-bag',
         'systemPrompt': GptClient.systemPrompt,
         'message': text,
       };
-
       _channel?.sink.add(jsonEncode(message));
     } catch (e) {
       _handleError('Failed to send message');
@@ -169,13 +187,11 @@ class _ChatBotState extends ConsumerState<ChatBot> {
           .addMessage(Message(text: errorMessage, isUser: false));
       ref.read(chatPageProvider.notifier).setLoading(false);
       ref.read(chatPageProvider.notifier).setHasConnectionError(true);
-      // Also reset "Other" waiting state on error
       ref.read(chatPageProvider.notifier).setIsWaitingForOtherInput(false);
       if (widget.request == null) {
         ref.read(chatPageProvider.notifier).setDetectedRequest(null);
       }
     }
-
     if (_channel != null) {
       _channel?.sink.close();
       _channel = null;
@@ -195,8 +211,19 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   }
 
   void _handleOptionTap(String option) {
+    if (!mounted) return;
+    final currentRequest =
+        widget.request ?? ref.read(chatPageProvider).detectedRequest;
+    final isStructured =
+        currentRequest != null &&
+        (currentRequest.toLowerCase() == 'flood' ||
+            currentRequest.toLowerCase() == 'earthquake');
+
     if (option.toLowerCase() == 'other' && mounted) {
       ref.read(chatPageProvider.notifier).setIsWaitingForOtherInput(true);
+      if (isStructured) {
+        ref.read(chatPageProvider.notifier).incrementCurrentStep();
+      }
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _textFocusNode.requestFocus();
       });
@@ -206,22 +233,23 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     if (option.isNotEmpty) {
       _sendMessage(option);
     }
-    if (!mounted) return;
-    final currentRequest =
-        widget.request ?? ref.read(chatPageProvider).detectedRequest;
-    if (mounted &&
-        currentRequest != null &&
-        (currentRequest.toLowerCase() == 'flood' ||
-            currentRequest.toLowerCase() == 'earthquake')) {
+
+    if (isStructured && mounted) {
       ref.read(chatPageProvider.notifier).incrementCurrentStep();
     }
+
     _scrollToBottom();
   }
 
   void _handleSend() {
     final text = _controller.text.trim();
     if (text.isEmpty || !mounted) return;
+
     _controller.clear();
+
+    if (mounted && ref.read(chatClearedProvider)) {
+      ref.read(chatClearedProvider.notifier).state = false;
+    }
 
     String? detected;
     if (mounted &&
@@ -233,12 +261,12 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       }
     }
 
+    if (!mounted) return;
     final isWaitingForOther = ref.read(chatPageProvider).isWaitingForOtherInput;
-
     _sendMessage(text);
+
     if (isWaitingForOther && mounted) {
       ref.read(chatPageProvider.notifier).setIsWaitingForOtherInput(false);
-
       if (detected != null &&
           (mounted && detected.toLowerCase() == 'flood' ||
               detected.toLowerCase() == 'earthquake')) {
@@ -249,6 +277,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   }
 
   bool _isTextFieldEnabled(WidgetRef ref) {
+    if (mounted && ref.watch(chatClearedProvider)) return true;
     if (!mounted) return false;
     final isWaitingForOther = ref.watch(
       chatPageProvider.select((v) => v.isWaitingForOtherInput),
@@ -262,6 +291,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     if (currentRequest == null || currentRequest.toLowerCase() == 'medical') {
       return true;
     }
+
     return false;
   }
 
@@ -329,7 +359,11 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                             onTap: () {
                               if (mounted) {
                                 _chatId = const Uuid().v4();
-                                ref.invalidate(chatPageProvider);
+                                if (mounted) {
+                                  ref.invalidate(chatPageProvider);
+                                  ref.read(chatClearedProvider.notifier).state =
+                                      true;
+                                }
                               }
                               if (mounted) {
                                 Navigator.pop(context);
@@ -355,6 +389,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
               final messages = ref.watch(
                 chatPageProvider.select((v) => v.messages),
               );
+
               return messages.isEmpty
                   ? Expanded(
                     child: Padding(
@@ -415,6 +450,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
               final isLoading = ref.watch(
                 chatPageProvider.select((v) => v.isLoading),
               );
+
               return Column(
                 children: [
                   if (isLoading)
@@ -548,15 +584,18 @@ class _ChatBotState extends ConsumerState<ChatBot> {
           ),
           Consumer(
             builder: (context, ref, child) {
+              if (!mounted) return const SizedBox.shrink();
               final isLoading = ref.watch(
                 chatPageProvider.select((v) => v.isLoading),
               );
+
               if (!message.isUser && isLastBotMessage && !isLoading) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [const SizedBox(height: 8), _buildOptions(ref)],
                 );
               }
+
               return const SizedBox.shrink();
             },
           ),
@@ -571,18 +610,13 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     final hasError = ref.watch(
       chatPageProvider.select((v) => v.hasConnectionError),
     );
-    if (hasError) {
-      return const SizedBox.shrink();
-    }
+    if (hasError) return const SizedBox.shrink();
     if (!mounted) return const SizedBox.shrink();
     final detectedRequest = ref.watch(
       chatPageProvider.select((v) => v.detectedRequest),
     );
     final currentRequest = widget.request ?? detectedRequest;
-
-    if (currentRequest == null) {
-      return const SizedBox.shrink();
-    }
+    if (currentRequest == null) return const SizedBox.shrink();
 
     List<List<String>> answerOptions;
     switch (currentRequest.toLowerCase()) {
@@ -597,18 +631,15 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     }
 
     if (!mounted) return const SizedBox.shrink();
+
     final currentStep = ref.watch(
       chatPageProvider.select((v) => v.currentStep),
     );
-
-    if (currentStep >= answerOptions.length) {
-      return const SizedBox.shrink();
-    }
+    if (currentStep >= answerOptions.length) return const SizedBox.shrink();
 
     final options = answerOptions[currentStep];
-    if (options.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (options.isEmpty) return const SizedBox.shrink();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.only(left: 40),
@@ -687,8 +718,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                     final enabled = _isTextFieldEnabled(ref);
                     return TextField(
                       controller: _controller,
-                      focusNode:
-                          _textFocusNode, // REQ 1: use dedicated FocusNode
+                      focusNode: _textFocusNode,
                       enabled: enabled,
                       decoration: InputDecoration(
                         hintText:
@@ -711,7 +741,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                       ),
                       maxLines: null,
                       textCapitalization: TextCapitalization.sentences,
-                      onSubmitted: (_) => _handleSend(), // allow keyboard send
+                      onSubmitted: (_) => _handleSend(),
                     );
                   },
                 ),
