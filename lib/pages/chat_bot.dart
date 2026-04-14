@@ -72,7 +72,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
               r'please answer my question',
               caseSensitive: false,
             ).hasMatch(fullMessage);
-            if (!mounted) return;
             final currentRequest =
                 widget.request ?? ref.read(chatPageProvider).detectedRequest;
             final isStructured =
@@ -80,15 +79,14 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                 (currentRequest.toLowerCase() == 'flood' ||
                     currentRequest.toLowerCase() == 'earthquake');
 
-            if (mounted) {
-              if (isRetry && isStructured) {
-                ref.read(chatPageProvider.notifier).decrementCurrentStep();
-              }
-              ref
-                  .read(chatPageProvider.notifier)
-                  .addMessage(Message(text: fullMessage, isUser: false));
-              ref.read(chatPageProvider.notifier).setLoading(false);
+            if (isRetry && isStructured) {
+              ref.read(chatPageProvider.notifier).decrementCurrentStep();
             }
+
+            ref
+                .read(chatPageProvider.notifier)
+                .addMessage(Message(text: fullMessage, isUser: false));
+            ref.read(chatPageProvider.notifier).setLoading(false);
           }
           _scrollToBottom();
           responseBuffer.clear();
@@ -221,23 +219,21 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
     if (option.toLowerCase() == 'other' && mounted) {
       ref.read(chatPageProvider.notifier).setIsWaitingForOtherInput(true);
-      if (isStructured) {
-        ref.read(chatPageProvider.notifier).incrementCurrentStep();
-      }
+      ref.read(chatPageProvider.notifier).setDisableOptions(true);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _textFocusNode.requestFocus();
       });
+      if (isStructured && mounted) {
+        ref.read(chatPageProvider.notifier).incrementCurrentStep();
+      }
       return;
     }
-
     if (option.isNotEmpty) {
       _sendMessage(option);
     }
-
     if (isStructured && mounted) {
       ref.read(chatPageProvider.notifier).incrementCurrentStep();
     }
-
     _scrollToBottom();
   }
 
@@ -250,6 +246,8 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     if (mounted && ref.read(chatClearedProvider)) {
       ref.read(chatClearedProvider.notifier).state = false;
     }
+    if (!mounted) return;
+    ref.read(chatPageProvider.notifier).setDisableOptions(false);
 
     String? detected;
     if (mounted &&
@@ -611,6 +609,11 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       chatPageProvider.select((v) => v.hasConnectionError),
     );
     if (hasError) return const SizedBox.shrink();
+    if (!mounted) return const SizedBox.shrink();
+    final disableOptions = ref.watch(
+      chatPageProvider.select((v) => v.disableOptionsOnOtherTap),
+    );
+    if (disableOptions) return const SizedBox.shrink();
     if (!mounted) return const SizedBox.shrink();
     final detectedRequest = ref.watch(
       chatPageProvider.select((v) => v.detectedRequest),

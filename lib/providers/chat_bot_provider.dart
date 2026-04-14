@@ -11,6 +11,7 @@ class ChatPageNotifier extends StateNotifier<ChatPageState> {
           isWaitingForOtherInput: false,
           detectedRequest: null,
           hasConnectionError: false,
+          disableOptionsOnOtherTap: false,
         ),
       );
 
@@ -23,7 +24,9 @@ class ChatPageNotifier extends StateNotifier<ChatPageState> {
   }
 
   void decrementCurrentStep() {
-    state = state.copyWith(currentStep: state.currentStep - 1);
+    if (state.currentStep > 0) {
+      state = state.copyWith(currentStep: state.currentStep - 1);
+    }
   }
 
   void setLoading(bool loading) {
@@ -41,6 +44,10 @@ class ChatPageNotifier extends StateNotifier<ChatPageState> {
   void setHasConnectionError(bool hasError) {
     state = state.copyWith(hasConnectionError: hasError);
   }
+
+  void setDisableOptions(bool disable) {
+    state = state.copyWith(disableOptionsOnOtherTap: disable);
+  }
 }
 
 class ChatPageState {
@@ -50,6 +57,7 @@ class ChatPageState {
   final bool isWaitingForOtherInput;
   final String? detectedRequest;
   final bool hasConnectionError;
+  final bool disableOptionsOnOtherTap;
 
   ChatPageState({
     this.messages = const [],
@@ -58,6 +66,7 @@ class ChatPageState {
     this.isWaitingForOtherInput = false,
     this.detectedRequest,
     this.hasConnectionError = false,
+    this.disableOptionsOnOtherTap = false,
   });
 
   ChatPageState copyWith({
@@ -67,6 +76,7 @@ class ChatPageState {
     bool? isWaitingForOtherInput,
     String? detectedRequest,
     bool? hasConnectionError,
+    bool? disableOptionsOnOtherTap,
   }) {
     return ChatPageState(
       messages: messages ?? this.messages,
@@ -76,6 +86,8 @@ class ChatPageState {
           isWaitingForOtherInput ?? this.isWaitingForOtherInput,
       detectedRequest: detectedRequest ?? this.detectedRequest,
       hasConnectionError: hasConnectionError ?? this.hasConnectionError,
+      disableOptionsOnOtherTap:
+          disableOptionsOnOtherTap ?? this.disableOptionsOnOtherTap,
     );
   }
 }
