@@ -10,7 +10,6 @@ import 'package:life_line/providers/chat_bot_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/models/message.dart';
-import 'dart:developer';
 
 class ChatBot extends ConsumerStatefulWidget {
   final String? request; // "flood", "earthquake", "medical"
@@ -109,7 +108,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
   String? _detectRequestFromMessage(String message) {
     final lowerMessage = message.toLowerCase();
-    log('Testing message: "$lowerMessage"');
 
     final floodPattern = RegExp(
       r'\b(flood|flooding|flooded|water|drowning|submerged|inundated|deluge)\b',
@@ -122,17 +120,13 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     );
 
     if (floodPattern.hasMatch(lowerMessage)) {
-      log('Flood pattern matched!');
       return 'flood';
     } else if (earthquakePattern.hasMatch(lowerMessage)) {
-      log('Earthquake pattern matched!');
       return 'earthquake';
     } else if (medicalPattern.hasMatch(lowerMessage)) {
-      log('Medical pattern matched!');
       return 'medical';
     }
 
-    log('No pattern matched');
     return null;
   }
 
@@ -226,14 +220,15 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
   void _handleSend() {
     final text = _controller.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || !mounted) return;
     _controller.clear();
 
     String? detected;
-    if (widget.request == null &&
+    if (mounted &&
+        widget.request == null &&
         ref.read(chatPageProvider).detectedRequest == null) {
       detected = _detectRequestFromMessage(text);
-      if (detected != null) {
+      if (detected != null && mounted) {
         ref.read(chatPageProvider.notifier).setDetectedRequest(detected);
       }
     }
@@ -245,7 +240,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       ref.read(chatPageProvider.notifier).setIsWaitingForOtherInput(false);
 
       if (detected != null &&
-          (detected.toLowerCase() == 'flood' ||
+          (mounted && detected.toLowerCase() == 'flood' ||
               detected.toLowerCase() == 'earthquake')) {
         ref.read(chatPageProvider.notifier).incrementCurrentStep();
       }
@@ -259,6 +254,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       chatPageProvider.select((v) => v.isWaitingForOtherInput),
     );
     if (isWaitingForOther) return true;
+    if (!mounted) return false;
     final detectedRequest = ref.watch(
       chatPageProvider.select((v) => v.detectedRequest),
     );
@@ -332,9 +328,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                             ),
                             onTap: () {
                               if (mounted) {
-                                ref
-                                    .read(chatPageProvider.notifier)
-                                    .setDetectedRequest(null);
                                 _chatId = const Uuid().v4();
                                 ref.invalidate(chatPageProvider);
                               }
@@ -555,34 +548,15 @@ class _ChatBotState extends ConsumerState<ChatBot> {
           ),
           Consumer(
             builder: (context, ref, child) {
-              if (!mounted) return const SizedBox.shrink();
-
               final isLoading = ref.watch(
                 chatPageProvider.select((v) => v.isLoading),
               );
-              final detectedRequest = ref.watch(
-                chatPageProvider.select((v) => v.detectedRequest),
-              );
-
-              // REQ 5: Do NOT show options while waiting for "Other" custom input
-              final isWaitingForOther = ref.watch(
-                chatPageProvider.select((v) => v.isWaitingForOtherInput),
-              );
-
-              log('Detected Request: $detectedRequest');
-
-              if (mounted &&
-                  !message.isUser &&
-                  isLastBotMessage &&
-                  !isLoading &&
-                  !isWaitingForOther && // <-- REQ 5: suppress options during "Other" input
-                  detectedRequest != null) {
+              if (!message.isUser && isLastBotMessage && !isLoading) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [const SizedBox(height: 8), _buildOptions(ref)],
                 );
               }
-
               return const SizedBox.shrink();
             },
           ),
@@ -598,21 +572,15 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       chatPageProvider.select((v) => v.hasConnectionError),
     );
     if (hasError) {
-      log('_buildOptions returning empty - connection error');
       return const SizedBox.shrink();
     }
-
+    if (!mounted) return const SizedBox.shrink();
     final detectedRequest = ref.watch(
       chatPageProvider.select((v) => v.detectedRequest),
     );
     final currentRequest = widget.request ?? detectedRequest;
 
-    log(
-      '_buildOptions called - widget.request: ${widget.request}, detectedRequest: $detectedRequest, currentRequest: $currentRequest',
-    );
-
     if (currentRequest == null) {
-      log('_buildOptions returning empty - no request');
       return const SizedBox.shrink();
     }
 
@@ -634,22 +602,13 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     );
 
     if (currentStep >= answerOptions.length) {
-      log(
-        '_buildOptions returning empty - step $currentStep >= ${answerOptions.length}',
-      );
       return const SizedBox.shrink();
     }
 
     final options = answerOptions[currentStep];
     if (options.isEmpty) {
-      log('_buildOptions returning empty - no options for step $currentStep');
       return const SizedBox.shrink();
     }
-
-    log(
-      '_buildOptions showing ${options.length} options for step $currentStep: $options',
-    );
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.only(left: 40),
