@@ -101,3 +101,5 @@ final chatPageProvider = StateNotifierProvider<ChatPageNotifier, ChatPageState>(
 final chatClearedProvider = StateProvider.autoDispose<bool>((ref) {
   return false;
 });
+
+final isSpeechListening = StateProvider<bool>((ref) => false);

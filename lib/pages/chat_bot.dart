@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line/pages/landing_page.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:life_line/config/gpt_client.dart';
 import 'package:life_line/providers/chat_bot_provider.dart';
@@ -25,6 +27,8 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _textFocusNode = FocusNode();
+  final SpeechToText _speechToText = SpeechToText();
+  bool _speechInitialized = false;
 
   String _chatId = const Uuid().v4();
   WebSocketChannel? _channel;
@@ -32,10 +36,55 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   @override
   void initState() {
     super.initState();
+    _initializeSpeech();
     _initializeWebSocket();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _sendInitialMessage();
     });
+  }
+
+  Future<void> _initializeSpeech() async {
+    try {
+      _speechInitialized = await _speechToText.initialize(
+        onError: (error) {
+          if (mounted) {
+            ref.read(isSpeechListening.notifier).state = false;
+            _handleExceptionError('Sorry, an unexpected error occured');
+          }
+        },
+        onStatus: (status) {
+          if (status == 'done' || status == 'notListening') {
+            if (mounted) {
+              ref.read(isSpeechListening.notifier).state = false;
+            }
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        ref.read(isSpeechListening.notifier).state = false;
+        _handleExceptionError('Sorry, an unexpected error occured');
+      }
+      _speechInitialized = false;
+    }
+  }
+
+  void _handleExceptionError(String msg) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.warning, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text(msg)),
+            ],
+          ),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
   }
 
   @override
@@ -47,6 +96,43 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       _channel?.sink.close();
     }
     super.dispose();
+  }
+
+  void _startListening() async {
+    try {
+      if (!_speechInitialized) {
+        await _initializeSpeech();
+      }
+      if (_speechInitialized) {
+        await _speechToText.listen(onResult: _onSpeechResult);
+        if (mounted) {
+          ref.read(isSpeechListening.notifier).state = true;
+        }
+      }
+    } catch (e) {
+      _handleExceptionError('Mic failed to initialize');
+    }
+  }
+
+  void _stopListening() async {
+    try {
+      await _speechToText.stop();
+      if (mounted) {
+        ref.read(isSpeechListening.notifier).state = false;
+      }
+    } catch (e) {
+      _handleExceptionError('An unexpected error occured');
+    }
+  }
+
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    if (mounted) {
+      _controller.text = result.recognizedWords;
+      // Move cursor to end of text
+      _controller.selection = TextSelection.fromPosition(
+        TextPosition(offset: _controller.text.length),
+      );
+    }
   }
 
   void _initializeWebSocket() {
@@ -744,7 +830,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                       ),
                       maxLines: null,
                       textCapitalization: TextCapitalization.sentences,
-                      onSubmitted: (_) => _handleSend(),
                     );
                   },
                 ),
@@ -754,26 +839,91 @@ class _ChatBotState extends ConsumerState<ChatBot> {
             Consumer(
               builder: (context, ref, child) {
                 final enabled = _isTextFieldEnabled(ref);
-                return Container(
-                  decoration: BoxDecoration(
-                    color:
-                        enabled
-                            ? AppColors.primaryMaroon
-                            : AppColors.primaryMaroon.withOpacity(0.6),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryMaroon.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Mic Button
+                    Consumer(
+                      builder: (context, ref, _) {
+                        if (!mounted) return const SizedBox.shrink();
+                        final isListening = ref.watch(isSpeechListening);
+                        return Container(
+                          decoration: BoxDecoration(
+                            color:
+                                isListening
+                                    ? Colors.red
+                                    : (enabled)
+                                    ? AppColors.primaryMaroon
+                                    : AppColors.primaryMaroon.withOpacity(0.6),
+                            shape: BoxShape.circle,
+                            boxShadow:
+                                isListening
+                                    ? [
+                                      // Glowing effect when mic is active
+                                      BoxShadow(
+                                        color: Colors.red.withOpacity(0.4),
+                                        blurRadius: 20,
+                                        spreadRadius: 4,
+                                        offset: const Offset(0, 0),
+                                      ),
+                                      BoxShadow(
+                                        color: AppColors.primaryMaroon
+                                            .withOpacity(0.3),
+                                        blurRadius: 30,
+                                        spreadRadius: 8,
+                                        offset: const Offset(0, 0),
+                                      ),
+                                    ]
+                                    : [
+                                      BoxShadow(
+                                        color: AppColors.primaryMaroon
+                                            .withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                          ),
+                          child: IconButton(
+                            onPressed:
+                                enabled
+                                    ? (isListening
+                                        ? _stopListening
+                                        : _startListening)
+                                    : null,
+                            icon: Icon(
+                              enabled ? Icons.mic : Icons.mic_off,
+                              color: AppColors.white,
+                            ),
+                            iconSize: 20,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    // Send Button
+                    Container(
+                      decoration: BoxDecoration(
+                        color:
+                            enabled
+                                ? AppColors.primaryMaroon
+                                : AppColors.primaryMaroon.withOpacity(0.6),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryMaroon.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: IconButton(
-                    onPressed: enabled ? _handleSend : null,
-                    icon: const Icon(Icons.send, color: AppColors.white),
-                    iconSize: 20,
-                  ),
+                      child: IconButton(
+                        onPressed: enabled ? _handleSend : null,
+                        icon: const Icon(Icons.send, color: AppColors.white),
+                        iconSize: 20,
+                      ),
+                    ),
+                  ],
                 );
               },
             ),

@@ -35,7 +35,7 @@ android {
     defaultConfig {
         applicationId = "com.example.life_line"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 30
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
