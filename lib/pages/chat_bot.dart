@@ -158,6 +158,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
               r'please answer my question',
               caseSensitive: false,
             ).hasMatch(fullMessage);
+            if (!mounted) return;
             final currentRequest =
                 widget.request ?? ref.read(chatPageProvider).detectedRequest;
             final isStructured =
@@ -165,14 +166,16 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                 (currentRequest.toLowerCase() == 'flood' ||
                     currentRequest.toLowerCase() == 'earthquake');
 
-            if (isRetry && isStructured) {
+            if (isRetry && isStructured && mounted) {
               ref.read(chatPageProvider.notifier).decrementCurrentStep();
             }
 
-            ref
-                .read(chatPageProvider.notifier)
-                .addMessage(Message(text: fullMessage, isUser: false));
-            ref.read(chatPageProvider.notifier).setLoading(false);
+            if (mounted) {
+              ref
+                  .read(chatPageProvider.notifier)
+                  .addMessage(Message(text: fullMessage, isUser: false));
+              ref.read(chatPageProvider.notifier).setLoading(false);
+            }
           }
           _scrollToBottom();
           responseBuffer.clear();
@@ -694,13 +697,11 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     final hasError = ref.watch(
       chatPageProvider.select((v) => v.hasConnectionError),
     );
-    if (hasError) return const SizedBox.shrink();
-    if (!mounted) return const SizedBox.shrink();
+    if (hasError && mounted) return const SizedBox.shrink();
     final disableOptions = ref.watch(
       chatPageProvider.select((v) => v.disableOptionsOnOtherTap),
     );
-    if (disableOptions) return const SizedBox.shrink();
-    if (!mounted) return const SizedBox.shrink();
+    if (disableOptions && mounted) return const SizedBox.shrink();
     final detectedRequest = ref.watch(
       chatPageProvider.select((v) => v.detectedRequest),
     );
@@ -720,7 +721,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     }
 
     if (!mounted) return const SizedBox.shrink();
-
     final currentStep = ref.watch(
       chatPageProvider.select((v) => v.currentStep),
     );
@@ -804,6 +804,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                 ),
                 child: Consumer(
                   builder: (context, ref, child) {
+                    if (!mounted) return const SizedBox.shrink();
                     final enabled = _isTextFieldEnabled(ref);
                     return TextField(
                       controller: _controller,
@@ -838,8 +839,8 @@ class _ChatBotState extends ConsumerState<ChatBot> {
             const SizedBox(width: 8),
             Consumer(
               builder: (context, ref, child) {
+                if (!mounted) return const SizedBox.shrink();
                 final enabled = _isTextFieldEnabled(ref);
-
                 return Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

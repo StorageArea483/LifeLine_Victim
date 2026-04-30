@@ -128,7 +128,8 @@ class OfflineConnectivity extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.softBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.accentRose,
+        backgroundColor: AppColors.surfaceLight,
+        elevation: 0,
         title: const Text('Offline Mode', style: AppText.appHeader),
         centerTitle: true,
       ),

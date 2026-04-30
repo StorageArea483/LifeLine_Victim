@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "909144850972-peg740f3a925uu532pssrin3aufaldbc.apps.googleusercontent.com",
+          "client_id": "909144850972-9dh80hes5rhrlneps2a5c5fu66hqips0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.life_line",
-            "certificate_hash": "4a2359ba78c2c7b8a3c310b57554cf621cd298cb"
+            "certificate_hash": "0a2b6feb05b760f1e8ef4ecb26a9b8ad8a3975e1"
           }
         },
         {

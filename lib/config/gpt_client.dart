@@ -1,6 +1,6 @@
 class GptClient {
   static const String gptUrl =
-      'wss://backend.buildpicoapps.com/api/chatbot/chat';
+      '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';
 
   static const List<List<String>> floodAnswers = [
     // Q1: Number of people

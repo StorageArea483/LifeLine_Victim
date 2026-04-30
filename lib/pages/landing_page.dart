@@ -704,7 +704,14 @@ class _LandingPageState extends ConsumerState<LandingPage>
         'severity': severity,
       });
     } catch (e) {
-      debugPrint('Error saving severity: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unexpected error occurred, please restart the app'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 }

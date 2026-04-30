@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:life_line/pages/chat_bot.dart';
 import 'package:life_line/pages/landing_page.dart';
+import 'package:life_line/pages/victim_map_page.dart';
 import 'package:life_line/styles/styles.dart';
-import 'package:life_line/widgets/features/maps_module/share_location.dart';
 
 class BottomNavbar extends StatelessWidget {
   final int currentIndex;
-  final Function(int)? onTap;
 
-  const BottomNavbar({super.key, required this.currentIndex, this.onTap});
+  const BottomNavbar({super.key, required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +22,7 @@ class BottomNavbar extends StatelessWidget {
           );
         } else if (index == 1 && context.mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const ShareLocation()),
+            MaterialPageRoute(builder: (context) => const VictimMapPage()),
           );
         } else if (index == 2 && context.mounted) {
           Navigator.of(context).pushReplacement(

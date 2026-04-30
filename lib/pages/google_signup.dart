@@ -10,10 +10,10 @@ class GoogleSignup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: AppContainers.pageContainer,
-
-        child: SafeArea(
+      backgroundColor: AppColors.softBackground,
+      body: SafeArea(
+        child: Container(
+          decoration: AppContainers.pageContainer,
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
 
