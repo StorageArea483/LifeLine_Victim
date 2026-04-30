@@ -1,15 +1,13 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:life_line/pages/landing_page.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:life_line/config/gpt_client.dart';
+import 'package:life_line/config/grok_client.dart';
 import 'package:life_line/providers/chat_bot_provider.dart';
-import 'package:uuid/uuid.dart';
 
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/models/message.dart';
@@ -30,14 +28,16 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   final SpeechToText _speechToText = SpeechToText();
   bool _speechInitialized = false;
 
-  String _chatId = const Uuid().v4();
-  WebSocketChannel? _channel;
+  final List<Map<String, String>> _conversationHistory = [];
 
   @override
   void initState() {
     super.initState();
     _initializeSpeech();
-    _initializeWebSocket();
+    _conversationHistory.add({
+      'role': 'system',
+      'content': GrokClient.systemPrompt,
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _sendInitialMessage();
     });
@@ -92,9 +92,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     _controller.dispose();
     _scrollController.dispose();
     _textFocusNode.dispose();
-    if (_channel != null) {
-      _channel?.sink.close();
-    }
     super.dispose();
   }
 
@@ -135,58 +132,63 @@ class _ChatBotState extends ConsumerState<ChatBot> {
     }
   }
 
-  void _initializeWebSocket() {
+  Future<void> _sendToOpenRouter(String userMessage) async {
     try {
-      if (_channel != null) {
-        _channel?.sink.close();
-        _channel = null;
-      }
+      // Add user message to conversation history
+      _conversationHistory.add({'role': 'user', 'content': userMessage});
 
-      _channel = WebSocketChannel.connect(Uri.parse(GptClient.gptUrl));
-      final StringBuffer responseBuffer = StringBuffer();
-
-      _channel!.stream.listen(
-        (data) {
-          if (!mounted) return;
-          responseBuffer.write(data.toString());
+      final response = await http.post(
+        Uri.parse(GrokClient.apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${GrokClient.apiKey}',
+          'HTTP-Referer': 'https://lifeline.app',
+          'X-Title': 'LifeLine Emergency Assistant',
         },
-        onDone: () {
-          if (!mounted) return;
-          final fullMessage = responseBuffer.toString().trim();
-          if (fullMessage.isNotEmpty && mounted) {
-            final isRetry = RegExp(
-              r'please answer my question',
-              caseSensitive: false,
-            ).hasMatch(fullMessage);
-            if (!mounted) return;
-            final currentRequest =
-                widget.request ?? ref.read(chatPageProvider).detectedRequest;
-            final isStructured =
-                currentRequest != null &&
-                (currentRequest.toLowerCase() == 'flood' ||
-                    currentRequest.toLowerCase() == 'earthquake');
-
-            if (isRetry && isStructured && mounted) {
-              ref.read(chatPageProvider.notifier).decrementCurrentStep();
-            }
-
-            if (mounted) {
-              ref
-                  .read(chatPageProvider.notifier)
-                  .addMessage(Message(text: fullMessage, isUser: false));
-              ref.read(chatPageProvider.notifier).setLoading(false);
-            }
-          }
-          _scrollToBottom();
-          responseBuffer.clear();
-          _channel = null;
-        },
-        onError: (error) {
-          _handleError('Connection error');
-          responseBuffer.clear();
-          _channel = null;
-        },
+        body: jsonEncode({
+          'model': GrokClient.modelName,
+          'messages': _conversationHistory,
+        }),
       );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final assistantMessage =
+            data['choices'][0]['message']['content'] as String;
+
+        // Add assistant response to conversation history
+        _conversationHistory.add({
+          'role': 'assistant',
+          'content': assistantMessage,
+        });
+
+        final isRetry = RegExp(
+          r'please answer my question',
+          caseSensitive: false,
+        ).hasMatch(assistantMessage);
+
+        final currentRequest = widget.request;
+        final isStructured =
+            currentRequest != null &&
+            (currentRequest.toLowerCase() == 'flood' ||
+                currentRequest.toLowerCase() == 'earthquake');
+
+        if (isRetry && isStructured && mounted) {
+          ref.read(chatPageProvider.notifier).decrementCurrentStep();
+        }
+
+        if (mounted) {
+          ref
+              .read(chatPageProvider.notifier)
+              .addMessage(Message(text: assistantMessage, isUser: false));
+          ref.read(chatPageProvider.notifier).setLoading(false);
+        }
+        _scrollToBottom();
+      } else {
+        _handleError('Failed to get response, please try again');
+      }
     } catch (e) {
       _handleError('Failed to connect to Assistant, please retry');
     }
@@ -207,34 +209,10 @@ class _ChatBotState extends ConsumerState<ChatBot> {
         initialMessage = 'I need medical help';
         break;
       default:
-        initialMessage = 'I need help';
+        initialMessage = 'I need medical help';
     }
 
     _sendMessage(initialMessage);
-  }
-
-  String? _detectRequestFromMessage(String message) {
-    final lowerMessage = message.toLowerCase();
-
-    final floodPattern = RegExp(
-      r'\b(flood|flooding|flooded|water|drowning|submerged|inundated|deluge)\b',
-    );
-    final earthquakePattern = RegExp(
-      r'\b(earthquake|quake|tremor|seismic|shaking|aftershock|epicenter|magnitude)\b',
-    );
-    final medicalPattern = RegExp(
-      r'\b(medical|health|injury|injured|hurt|pain|sick|illness|emergency|ambulance|doctor|hospital)\b',
-    );
-
-    if (floodPattern.hasMatch(lowerMessage)) {
-      return 'flood';
-    } else if (earthquakePattern.hasMatch(lowerMessage)) {
-      return 'earthquake';
-    } else if (medicalPattern.hasMatch(lowerMessage)) {
-      return 'medical';
-    }
-
-    return null;
   }
 
   Future<void> _sendMessage(String text) async {
@@ -251,20 +229,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       _scrollToBottom();
     }
 
-    try {
-      if (_channel == null) {
-        _initializeWebSocket();
-      }
-      final message = {
-        'chatId': _chatId,
-        'appId': 'space-bag',
-        'systemPrompt': GptClient.systemPrompt,
-        'message': text,
-      };
-      _channel?.sink.add(jsonEncode(message));
-    } catch (e) {
-      _handleError('Failed to send message');
-    }
+    await _sendToOpenRouter(text);
   }
 
   void _handleError(String errorMessage) {
@@ -275,13 +240,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       ref.read(chatPageProvider.notifier).setLoading(false);
       ref.read(chatPageProvider.notifier).setHasConnectionError(true);
       ref.read(chatPageProvider.notifier).setIsWaitingForOtherInput(false);
-      if (widget.request == null) {
-        ref.read(chatPageProvider.notifier).setDetectedRequest(null);
-      }
-    }
-    if (_channel != null) {
-      _channel?.sink.close();
-      _channel = null;
     }
   }
 
@@ -299,8 +257,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
   void _handleOptionTap(String option) {
     if (!mounted) return;
-    final currentRequest =
-        widget.request ?? ref.read(chatPageProvider).detectedRequest;
+    final currentRequest = widget.request;
     final isStructured =
         currentRequest != null &&
         (currentRequest.toLowerCase() == 'flood' ||
@@ -332,21 +289,8 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
     _controller.clear();
 
-    if (mounted && ref.read(chatClearedProvider)) {
-      ref.read(chatClearedProvider.notifier).state = false;
-    }
     if (!mounted) return;
     ref.read(chatPageProvider.notifier).setDisableOptions(false);
-
-    String? detected;
-    if (mounted &&
-        widget.request == null &&
-        ref.read(chatPageProvider).detectedRequest == null) {
-      detected = _detectRequestFromMessage(text);
-      if (detected != null && mounted) {
-        ref.read(chatPageProvider.notifier).setDetectedRequest(detected);
-      }
-    }
 
     if (!mounted) return;
     final isWaitingForOther = ref.read(chatPageProvider).isWaitingForOtherInput;
@@ -354,27 +298,18 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
     if (isWaitingForOther && mounted) {
       ref.read(chatPageProvider.notifier).setIsWaitingForOtherInput(false);
-      if (detected != null &&
-          (mounted && detected.toLowerCase() == 'flood' ||
-              detected.toLowerCase() == 'earthquake')) {
-        ref.read(chatPageProvider.notifier).incrementCurrentStep();
-      }
       _textFocusNode.unfocus();
     }
   }
 
   bool _isTextFieldEnabled(WidgetRef ref) {
-    if (mounted && ref.watch(chatClearedProvider)) return true;
     if (!mounted) return false;
     final isWaitingForOther = ref.watch(
       chatPageProvider.select((v) => v.isWaitingForOtherInput),
     );
     if (isWaitingForOther) return true;
     if (!mounted) return false;
-    final detectedRequest = ref.watch(
-      chatPageProvider.select((v) => v.detectedRequest),
-    );
-    final currentRequest = widget.request ?? detectedRequest;
+    final currentRequest = widget.request;
     if (currentRequest == null || currentRequest.toLowerCase() == 'medical') {
       return true;
     }
@@ -445,11 +380,13 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                             ),
                             onTap: () {
                               if (mounted) {
-                                _chatId = const Uuid().v4();
+                                _conversationHistory.clear();
+                                _conversationHistory.add({
+                                  'role': 'system',
+                                  'content': GrokClient.systemPrompt,
+                                });
                                 if (mounted) {
                                   ref.invalidate(chatPageProvider);
-                                  ref.read(chatClearedProvider.notifier).state =
-                                      true;
                                 }
                               }
                               if (mounted) {
@@ -702,19 +639,16 @@ class _ChatBotState extends ConsumerState<ChatBot> {
       chatPageProvider.select((v) => v.disableOptionsOnOtherTap),
     );
     if (disableOptions && mounted) return const SizedBox.shrink();
-    final detectedRequest = ref.watch(
-      chatPageProvider.select((v) => v.detectedRequest),
-    );
-    final currentRequest = widget.request ?? detectedRequest;
+    final currentRequest = widget.request;
     if (currentRequest == null) return const SizedBox.shrink();
 
     List<List<String>> answerOptions;
     switch (currentRequest.toLowerCase()) {
       case 'flood':
-        answerOptions = GptClient.floodAnswers;
+        answerOptions = GrokClient.floodAnswers;
         break;
       case 'earthquake':
-        answerOptions = GptClient.earthquakeAnswers;
+        answerOptions = GrokClient.earthquakeAnswers;
         break;
       default:
         return const SizedBox.shrink();

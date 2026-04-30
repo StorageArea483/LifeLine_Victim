@@ -9,7 +9,6 @@ class ChatPageNotifier extends StateNotifier<ChatPageState> {
           isLoading: false,
           currentStep: 0,
           isWaitingForOtherInput: false,
-          detectedRequest: null,
           hasConnectionError: false,
           disableOptionsOnOtherTap: false,
         ),
@@ -37,10 +36,6 @@ class ChatPageNotifier extends StateNotifier<ChatPageState> {
     state = state.copyWith(isWaitingForOtherInput: waiting);
   }
 
-  void setDetectedRequest(String? request) {
-    state = state.copyWith(detectedRequest: request);
-  }
-
   void setHasConnectionError(bool hasError) {
     state = state.copyWith(hasConnectionError: hasError);
   }
@@ -55,7 +50,6 @@ class ChatPageState {
   final bool isLoading;
   final int currentStep;
   final bool isWaitingForOtherInput;
-  final String? detectedRequest;
   final bool hasConnectionError;
   final bool disableOptionsOnOtherTap;
 
@@ -64,7 +58,6 @@ class ChatPageState {
     this.isLoading = false,
     this.currentStep = 0,
     this.isWaitingForOtherInput = false,
-    this.detectedRequest,
     this.hasConnectionError = false,
     this.disableOptionsOnOtherTap = false,
   });
@@ -74,7 +67,6 @@ class ChatPageState {
     bool? isLoading,
     int? currentStep,
     bool? isWaitingForOtherInput,
-    String? detectedRequest,
     bool? hasConnectionError,
     bool? disableOptionsOnOtherTap,
   }) {
@@ -84,7 +76,6 @@ class ChatPageState {
       currentStep: currentStep ?? this.currentStep,
       isWaitingForOtherInput:
           isWaitingForOtherInput ?? this.isWaitingForOtherInput,
-      detectedRequest: detectedRequest ?? this.detectedRequest,
       hasConnectionError: hasConnectionError ?? this.hasConnectionError,
       disableOptionsOnOtherTap:
           disableOptionsOnOtherTap ?? this.disableOptionsOnOtherTap,
@@ -97,9 +88,5 @@ final chatPageProvider = StateNotifierProvider<ChatPageNotifier, ChatPageState>(
     return ChatPageNotifier();
   },
 );
-
-final chatClearedProvider = StateProvider.autoDispose<bool>((ref) {
-  return false;
-});
 
 final isSpeechListening = StateProvider<bool>((ref) => false);

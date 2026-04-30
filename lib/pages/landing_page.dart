@@ -317,7 +317,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                   MaterialPageRoute(
                                     builder:
                                         (context) =>
-                                            const ChatBot(request: 'Medical'),
+                                            const ChatBot(request: 'medical'),
                                   ),
                                 );
                               }
