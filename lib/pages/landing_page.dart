@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line/models/flood_data.dart';
 import 'package:life_line/pages/chat_bot.dart';
@@ -24,6 +25,9 @@ class _LandingPageState extends ConsumerState<LandingPage>
   final FloodService _floodService = FloodService();
   AnimationController? _pulseController;
   Animation<double>? _pulseAnimation;
+
+  // Track the maintenance dialog context so we can pop ONLY that dialog
+  BuildContext? _maintenanceDialogContext;
 
   @override
   void initState() {
@@ -414,16 +418,23 @@ class _LandingPageState extends ConsumerState<LandingPage>
               ),
             ),
           ),
+
           // Maintenance overlay
           maintenanceAsync.when(
             data: (isMaintenance) {
-              if (isMaintenance) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    _showMaintenanceDialog();
-                  }
-                });
-              }
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+
+                if (isMaintenance && _maintenanceDialogContext == null) {
+                  // Maintenance is ON and dialog is not showing → show it
+                  _showMaintenanceDialog();
+                } else if (!isMaintenance &&
+                    _maintenanceDialogContext != null) {
+                  // Maintenance is OFF and dialog is showing → dismiss ONLY the dialog
+                  Navigator.of(_maintenanceDialogContext!).pop();
+                  _maintenanceDialogContext = null;
+                }
+              });
               return const SizedBox.shrink();
             },
             loading: () => const SizedBox.shrink(),
@@ -748,49 +759,73 @@ class _LandingPageState extends ConsumerState<LandingPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder:
-          (context) => WillPopScope(
-            onWillPop: () async => false,
-            child: AlertDialog(
-              backgroundColor: AppColors.surfaceLight,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              contentPadding: const EdgeInsets.all(24),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.construction_rounded,
-                      color: AppColors.warning,
-                      size: 48,
+      builder: (dialogContext) {
+        // ← Capture the dialog's own BuildContext
+        _maintenanceDialogContext = dialogContext;
+        return PopScope(
+          canPop: false,
+          child: AlertDialog(
+            backgroundColor: AppColors.surfaceLight,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            contentPadding: const EdgeInsets.all(24),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.construction_rounded,
+                    color: AppColors.warning,
+                    size: 48,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'System Maintenance',
+                  style: AppText.formTitle.copyWith(fontSize: 20),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'We are currently performing system maintenance to improve your experience. Please try again later.',
+                  style: AppText.small.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      SystemNavigator.pop();
+                    },
+                    style: AppButtons.submit,
+                    child: Text(
+                      'Close App',
+                      style: AppText.button.copyWith(
+                        color: AppColors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'System Maintenance',
-                    style: AppText.formTitle.copyWith(fontSize: 20),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'We are currently performing system maintenance to improve your experience. Please try again later.',
-                    style: AppText.small.copyWith(
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-    );
+        );
+      },
+    ).then((_) {
+      // Clear the reference once the dialog is gone for any reason
+      _maintenanceDialogContext = null;
+    });
   }
 }

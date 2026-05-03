@@ -46,7 +46,6 @@ flutter:
   assets:
     - assets/images/
     - assets/offline_logos/
-    - assets/Logos/
     - assets/fonts/
 
 
