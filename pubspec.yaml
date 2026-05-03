@@ -44,9 +44,11 @@ flutter:
 
   # Assets
   assets:
-    - assets/images/ # include all images in this folder
-    - assets/logos/ # include all logos in this folder
-    - assets/fonts/ # include all fonts in this folder
+    - assets/images/
+    - assets/offline_logos/
+    - assets/Logos/
+    - assets/fonts/
+
 
   # Fonts
   fonts:

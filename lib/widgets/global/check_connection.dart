@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:life_line/pages/google_signup.dart';
-import 'package:life_line/pages/landing_page.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/global/victim_blocked.dart';
 import 'package:life_line/widgets/internet_connection.dart';
+import 'package:life_line/widgets/global/sos_route_wrapper.dart';
 
 class CheckConnection extends StatelessWidget {
   const CheckConnection({super.key});
@@ -40,7 +40,7 @@ class CheckConnection extends StatelessWidget {
             if (firestoreSnapshot.hasError ||
                 !firestoreSnapshot.hasData ||
                 !firestoreSnapshot.data!.exists) {
-              return const InternetConnection(child: LandingPage());
+              return const InternetConnection(child: SosRouteWrapper());
             }
 
             final userData =
@@ -51,7 +51,7 @@ class CheckConnection extends StatelessWidget {
               return InternetConnection(child: VictimBlocked(userEmail: email));
             }
 
-            return const InternetConnection(child: LandingPage());
+            return const InternetConnection(child: SosRouteWrapper());
           },
         );
       },

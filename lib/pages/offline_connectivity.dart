@@ -11,7 +11,7 @@ const List<Organization> _orgs = [
     type: 'Government Emergency Service',
     description:
         '24/7 emergency rescue, ambulance, and fire service across all KPK districts including Abbottabad.',
-    initials: 'assets/logos/R1.webp',
+    initials: 'assets/offline_logos/R1.webp',
     phones: [PhoneEntry('District Landline', '0992331564')],
   ),
 
@@ -21,7 +21,7 @@ const List<Organization> _orgs = [
     type: 'Provincial Government Authority',
     description:
         'Apex disaster management body for KPK. Coordinates flood, earthquake, and relief operations.',
-    initials: 'assets/logos/PD.webp',
+    initials: 'assets/offline_logos/PD.webp',
     phones: [
       PhoneEntry('Toll-Free Helpline', '1700'),
       PhoneEntry('Main Office', '0919219635'),
@@ -34,7 +34,7 @@ const List<Organization> _orgs = [
     type: 'Government Tertiary Hospital',
     description:
         'Largest hospital in Northern Pakistan (1,500 beds). 24/7 emergency, trauma, and ICU.',
-    initials: 'assets/logos/AT.webp',
+    initials: 'assets/offline_logos/AT.webp',
     phones: [
       PhoneEntry('Main Line', '09929311154'),
       PhoneEntry('Alt. Line', '09929311155'),
@@ -45,7 +45,7 @@ const List<Organization> _orgs = [
     type: 'Government District Hospital',
     description:
         'District HQ Hospital with 24/7 emergency and OPD services for Abbottabad district.',
-    initials: 'assets/logos/BH.webp',
+    initials: 'assets/offline_logos/BH.webp',
     phones: [
       PhoneEntry('Main', '0992333739'),
       PhoneEntry('Alt. 1', '09929310198'),
@@ -57,7 +57,7 @@ const List<Organization> _orgs = [
     type: 'Specialized Government Hospital',
     description:
         'Located within Ayub Medical Complex. Advanced oncology and diagnostics for the Hazara region.',
-    initials: 'assets/logos/IN.webp',
+    initials: 'assets/offline_logos/IN.webp',
     phones: [
       PhoneEntry('Main', '0992383149'),
       PhoneEntry('Alt.', '0992385462'),
@@ -69,7 +69,7 @@ const List<Organization> _orgs = [
     type: 'NGO / Humanitarian',
     description:
         'Active in disaster management, health, and clean water. Deployed in 2005 earthquake and floods.',
-    initials: 'assets/logos/Alkhidmat_Logo.webp',
+    initials: 'assets/offline_logos/Alkhidmat_Logo.webp',
     phones: [
       PhoneEntry('KPK Office', '0912263651'),
       PhoneEntry('KPK Office Alt.', '0912263652'),
@@ -80,7 +80,7 @@ const List<Organization> _orgs = [
     type: 'Local NGO',
     description:
         'Abbottabad-based NGO providing community welfare and disaster humanitarian support.',
-    initials: 'assets/logos/Rural_Development_Organization.webp',
+    initials: 'assets/offline_logos/Rural_Development_Organization.webp',
     phones: [PhoneEntry('Office', '03319109040')],
   ),
   Organization(
@@ -88,7 +88,7 @@ const List<Organization> _orgs = [
     type: 'PCP-Certified NGO',
     description:
         'Certified relief NGO providing shelter, livelihood, and disaster response in the Hazara region.',
-    initials: 'assets/logos/Saibaan_Organiztion_Logo.webp',
+    initials: 'assets/offline_logos/Saibaan_Organiztion_Logo.webp',
     phones: [
       PhoneEntry('Office Line 1', '0997440528'),
       PhoneEntry('Office Line 2', '0997440529'),
@@ -99,7 +99,7 @@ const List<Organization> _orgs = [
     type: 'Rehabilitation NGO',
     description:
         'Abbottabad-based NGO for rehabilitation and support for disaster-affected communities.',
-    initials: 'assets/logos/Pak_Irish_Center_Logo.webp',
+    initials: 'assets/offline_logos/Pak_Irish_Center_Logo.webp',
     phones: [PhoneEntry('Tel', '0992414465')],
   ),
 ];
