@@ -630,7 +630,6 @@ class _ChatBotState extends ConsumerState<ChatBot> {
 
   Widget _buildOptions(WidgetRef ref) {
     if (!mounted) return const SizedBox.shrink();
-
     final hasError = ref.watch(
       chatPageProvider.select((v) => v.hasConnectionError),
     );

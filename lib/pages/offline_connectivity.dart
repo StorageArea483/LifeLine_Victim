@@ -22,10 +22,7 @@ const List<Organization> _orgs = [
     description:
         'Apex disaster management body for KPK. Coordinates flood, earthquake, and relief operations.',
     initials: 'assets/offline_logos/PD.webp',
-    phones: [
-      PhoneEntry('Toll-Free Helpline', '1700'),
-      PhoneEntry('Main Office', '0919219635'),
-    ],
+    phones: [PhoneEntry('Main Office', '0919219635')],
   ),
 
   // Hospitals

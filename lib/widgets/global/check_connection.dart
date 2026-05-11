@@ -1,17 +1,18 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line/pages/google_signup.dart';
+import 'package:life_line/providers/user_status_provider.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/global/victim_blocked.dart';
 import 'package:life_line/widgets/internet_connection.dart';
 import 'package:life_line/widgets/global/sos_route_wrapper.dart';
 
-class CheckConnection extends StatelessWidget {
+class CheckConnection extends ConsumerWidget {
   const CheckConnection({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, authSnapshot) {
@@ -23,34 +24,37 @@ class CheckConnection extends StatelessWidget {
           return const InternetConnection(child: GoogleSignup());
         }
 
-        final String uid = authSnapshot.data!.uid;
-        final String email = authSnapshot.data!.email ?? '';
+        if (!context.mounted) return const SizedBox.shrink();
+        // User is authenticated, now check their blocked/deleted status
+        final userStatusAsync = ref.watch(userStatusStreamProvider);
 
-        return StreamBuilder<DocumentSnapshot>(
-          stream:
-              FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(uid)
-                  .snapshots(),
-          builder: (context, firestoreSnapshot) {
-            if (firestoreSnapshot.connectionState == ConnectionState.waiting) {
-              return _loadingScreen();
-            }
+        return userStatusAsync.when(
+          // Loading state - show loading screen
+          loading: () => _loadingScreen(),
 
-            if (firestoreSnapshot.hasError ||
-                !firestoreSnapshot.hasData ||
-                !firestoreSnapshot.data!.exists) {
+          // Error state - allow access (fail open for better UX)
+          error:
+              (error, stack) =>
+                  const InternetConnection(child: SosRouteWrapper()),
+
+          // Data received - check if user is blocked or deleted
+          data: (userStatus) {
+            if (userStatus == null) {
+              // No user status available, allow access
               return const InternetConnection(child: SosRouteWrapper());
             }
 
-            final userData =
-                firestoreSnapshot.data!.data() as Map<String, dynamic>;
-            final bool isBlocked = userData['blocked'] ?? false;
-
-            if (isBlocked) {
-              return InternetConnection(child: VictimBlocked(userEmail: email));
+            if (userStatus.isDeleted) {
+              return const GoogleSignup();
             }
 
+            if (userStatus.isBlocked) {
+              return InternetConnection(
+                child: VictimBlocked(userEmail: userStatus.email),
+              );
+            }
+
+            // User is not blocked or deleted, allow access
             return const InternetConnection(child: SosRouteWrapper());
           },
         );

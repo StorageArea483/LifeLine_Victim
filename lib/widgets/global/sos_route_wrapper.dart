@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:life_line/pages/landing_page.dart';
+import 'package:life_line/widgets/global/maintenance_route_wrapper.dart';
 import 'package:life_line/pages/sos_alternative.dart';
 import 'package:life_line/providers/admin_settings_provider.dart';
 import 'package:life_line/styles/styles.dart';
@@ -10,11 +10,14 @@ class SosRouteWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!context.mounted) return const SizedBox.shrink();
     final sosDisabledAsync = ref.watch(sosDisabledStreamProvider);
 
     return sosDisabledAsync.when(
       data: (sosDisabled) {
-        return sosDisabled ? const SosAlternative() : const LandingPage();
+        return sosDisabled
+            ? const SosAlternative()
+            : const MaintenanceRouteWrapper();
       },
       loading:
           () => const Scaffold(
@@ -25,7 +28,7 @@ class SosRouteWrapper extends ConsumerWidget {
           ),
       error:
           (error, stack) =>
-              const LandingPage(), // Default to LandingPage on error
+              const MaintenanceRouteWrapper(), // Default to MaintenanceRouteWrapper on error
     );
   }
 }

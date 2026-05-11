@@ -1,15 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line/models/flood_data.dart';
+import 'package:life_line/models/earthquake_data.dart';
 import 'package:life_line/pages/chat_bot.dart';
 import 'package:life_line/providers/landing_page_providers.dart';
-import 'package:life_line/providers/admin_settings_provider.dart';
 import 'package:life_line/services/auth_service.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
 import 'package:life_line/services/google_flood_service.dart';
+import 'package:life_line/services/earthquake_service.dart';
 import 'package:life_line/widgets/fetch_lat_long.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -23,11 +23,9 @@ class LandingPage extends ConsumerStatefulWidget {
 class _LandingPageState extends ConsumerState<LandingPage>
     with SingleTickerProviderStateMixin {
   final FloodService _floodService = FloodService();
+  final EarthquakeService _earthquakeService = EarthquakeService();
   AnimationController? _pulseController;
   Animation<double>? _pulseAnimation;
-
-  // Track the maintenance dialog context so we can pop ONLY that dialog
-  BuildContext? _maintenanceDialogContext;
 
   @override
   void initState() {
@@ -49,8 +47,6 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
   @override
   Widget build(BuildContext context) {
-    final maintenanceAsync = ref.watch(maintenanceStreamProvider);
-
     return Scaffold(
       backgroundColor: AppColors.softBackground,
       appBar: AppBar(
@@ -65,382 +61,349 @@ class _LandingPageState extends ConsumerState<LandingPage>
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 32),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 32),
 
-                  // SOS Section
-                  Center(
-                    child: Column(
-                      children: [
-                        Consumer(
-                          builder: (context, ref, child) {
-                            if (!mounted) return const SizedBox.shrink();
-                            final showEmergencyOptions = ref.watch(
-                              landingPageProvider.select(
-                                (v) => v.showEmergencyOptions,
+              // SOS Section
+              Center(
+                child: Column(
+                  children: [
+                    Consumer(
+                      builder: (context, ref, child) {
+                        if (!mounted) return const SizedBox.shrink();
+                        final showEmergencyOptions = ref.watch(
+                          landingPageProvider.select(
+                            (v) => v.showEmergencyOptions,
+                          ),
+                        );
+
+                        return Column(
+                          children: [
+                            if (showEmergencyOptions) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 24),
+                                child: Text(
+                                  'Select Emergency Type',
+                                  textAlign: TextAlign.center,
+                                  style: AppText.fieldLabel.copyWith(
+                                    fontSize: 16,
+                                  ),
+                                ),
                               ),
-                            );
-
-                            return Column(
-                              children: [
-                                if (showEmergencyOptions) ...[
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 24),
-                                    child: Text(
-                                      'Select Emergency Type',
-                                      textAlign: TextAlign.center,
-                                      style: AppText.fieldLabel.copyWith(
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 24),
-                                    child: Consumer(
-                                      builder: (context, ref, child) {
-                                        if (!mounted) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        final activeButton = ref.watch(
-                                          landingPageProvider.select(
-                                            (v) => v.activeButton,
-                                          ),
-                                        );
-                                        return Wrap(
-                                          spacing: 12,
-                                          runSpacing: 12,
-                                          alignment: WrapAlignment.center,
-                                          children: [
-                                            _buildEmergencyChip(
-                                              'Flood',
-                                              Icons.water_drop_rounded,
-                                              activeButton,
-                                            ),
-                                            _buildEmergencyChip(
-                                              'Accident',
-                                              Icons.car_crash_rounded,
-                                              activeButton,
-                                            ),
-                                            _buildEmergencyChip(
-                                              'Earthquake',
-                                              Icons.landscape_rounded,
-                                              activeButton,
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ],
-
-                                // Animated SOS Button
-                                GestureDetector(
-                                  onTap: () {
-                                    if (mounted) {
-                                      ref
-                                          .read(landingPageProvider.notifier)
-                                          .setShowEmergencyOptions(
-                                            !showEmergencyOptions,
-                                          );
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 24),
+                                child: Consumer(
+                                  builder: (context, ref, child) {
+                                    if (!mounted) {
+                                      return const SizedBox.shrink();
                                     }
-                                  },
-                                  child: AnimatedBuilder(
-                                    animation:
-                                        _pulseAnimation ??
-                                        const AlwaysStoppedAnimation(1.0),
-                                    builder: (context, child) {
-                                      return Container(
-                                        width: 240,
-                                        height: 240,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: AppColors.error
-                                                  .withOpacity(0.3),
-                                              blurRadius: 20,
-                                              spreadRadius:
-                                                  showEmergencyOptions ? 5 : 0,
-                                            ),
-                                          ],
-                                        ),
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            // Pulsing ring
-                                            if (showEmergencyOptions)
-                                              Transform.scale(
-                                                scale:
-                                                    _pulseAnimation?.value ??
-                                                    1.0,
-                                                child: Container(
-                                                  width: 220,
-                                                  height: 220,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    border: Border.all(
-                                                      color: AppColors
-                                                          .primaryMaroon
-                                                          .withOpacity(0.5),
-                                                      width: 3,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            // Main button
-                                            Container(
-                                              width: 200,
-                                              height: 200,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                gradient: LinearGradient(
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                  colors: [
-                                                    AppColors.error,
-                                                    AppColors.error.withOpacity(
-                                                      0.8,
-                                                    ),
-                                                  ],
-                                                ),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: AppColors.error
-                                                        .withOpacity(0.4),
-                                                    blurRadius: 15,
-                                                    offset: const Offset(0, 5),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: const Center(
-                                                child: Text(
-                                                  'SOS',
-                                                  style: TextStyle(
-                                                    fontFamily: 'SFPro',
-                                                    fontSize: 56,
-                                                    fontWeight: FontWeight.w900,
-                                                    color: AppColors.white,
-                                                    letterSpacing: 2,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  Center(
-                    child: Text(
-                      'In case of emergency, press the button to alert responders.',
-                      textAlign: TextAlign.center,
-                      style: AppText.small.copyWith(
-                        color: AppColors.textSecondary,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 48),
-
-                  // AI Assistant Section
-                  Text(
-                    'AI Assistant',
-                    style: AppText.fieldLabel.copyWith(fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceLight,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppColors.borderColor,
-                        width: 1,
-                      ),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: AppColors.shadowLight,
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primaryMaroon.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.asset(
-                                'assets/images/robo_head.webp',
-                                width: 56,
-                                height: 56,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Quick First Aid',
-                                style: AppText.fieldLabel.copyWith(
-                                  fontSize: 15,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 4),
-                              TextButton(
-                                onPressed: () {
-                                  if (mounted) {
-                                    Navigator.of(context).pushReplacement(
-                                      MaterialPageRoute(
-                                        builder:
-                                            (context) => const ChatBot(
-                                              request: 'medical',
-                                            ),
+                                    final activeButton = ref.watch(
+                                      landingPageProvider.select(
+                                        (v) => v.activeButton,
                                       ),
                                     );
-                                  }
-                                },
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        'Get instant safety and first aid tips.',
-                                        style: AppText.small.copyWith(
-                                          color: AppColors.textSecondary,
+                                    return Wrap(
+                                      spacing: 12,
+                                      runSpacing: 12,
+                                      alignment: WrapAlignment.center,
+                                      children: [
+                                        _buildEmergencyChip(
+                                          'Flood',
+                                          Icons.water_drop_rounded,
+                                          activeButton,
                                         ),
-                                      ),
-                                    ),
-                                    const Icon(
-                                      Icons.chevron_right,
-                                      color: AppColors.textSecondary,
-                                      size: 25,
-                                    ),
-                                  ],
+                                        _buildEmergencyChip(
+                                          'Accident',
+                                          Icons.car_crash_rounded,
+                                          activeButton,
+                                        ),
+                                        _buildEmergencyChip(
+                                          'Earthquake',
+                                          Icons.landscape_rounded,
+                                          activeButton,
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
 
-                  const SizedBox(height: 48),
-
-                  // Recent Notifications Section
-                  Text(
-                    'Recent Notifications',
-                    style: AppText.fieldLabel.copyWith(fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Empty State
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 36,
-                      horizontal: 24,
+                            // Animated SOS Button
+                            GestureDetector(
+                              onTap: () {
+                                if (mounted) {
+                                  ref
+                                      .read(landingPageProvider.notifier)
+                                      .setShowEmergencyOptions(
+                                        !showEmergencyOptions,
+                                      );
+                                }
+                              },
+                              child: AnimatedBuilder(
+                                animation:
+                                    _pulseAnimation ??
+                                    const AlwaysStoppedAnimation(1.0),
+                                builder: (context, child) {
+                                  return Container(
+                                    width: 240,
+                                    height: 240,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.error.withOpacity(
+                                            0.3,
+                                          ),
+                                          blurRadius: 20,
+                                          spreadRadius:
+                                              showEmergencyOptions ? 5 : 0,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        // Pulsing ring
+                                        if (showEmergencyOptions)
+                                          Transform.scale(
+                                            scale:
+                                                _pulseAnimation?.value ?? 1.0,
+                                            child: Container(
+                                              width: 220,
+                                              height: 220,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: AppColors.primaryMaroon
+                                                      .withOpacity(0.5),
+                                                  width: 3,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        // Main button
+                                        Container(
+                                          width: 200,
+                                          height: 200,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                AppColors.error,
+                                                AppColors.error.withOpacity(
+                                                  0.8,
+                                                ),
+                                              ],
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: AppColors.error
+                                                    .withOpacity(0.4),
+                                                blurRadius: 15,
+                                                offset: const Offset(0, 5),
+                                              ),
+                                            ],
+                                          ),
+                                          child: const Center(
+                                            child: Text(
+                                              'SOS',
+                                              style: TextStyle(
+                                                fontFamily: 'SFPro',
+                                                fontSize: 56,
+                                                fontWeight: FontWeight.w900,
+                                                color: AppColors.white,
+                                                letterSpacing: 2,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceLight,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: AppColors.shadowLight,
-                          blurRadius: 10,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        const Icon(
-                          Icons.notifications_none_rounded,
-                          size: 40,
-                          color: AppColors.textLight,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          "You're all caught up!",
-                          style: AppText.fieldLabel.copyWith(fontSize: 15),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'No new notifications at the moment.',
-                          style: AppText.small.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ),
 
-          // Maintenance overlay
-          maintenanceAsync.when(
-            data: (isMaintenance) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (!mounted) return;
+              const SizedBox(height: 32),
 
-                if (isMaintenance && _maintenanceDialogContext == null) {
-                  // Maintenance is ON and dialog is not showing → show it
-                  _showMaintenanceDialog();
-                } else if (!isMaintenance &&
-                    _maintenanceDialogContext != null) {
-                  // Maintenance is OFF and dialog is showing → dismiss ONLY the dialog
-                  Navigator.of(_maintenanceDialogContext!).pop();
-                  _maintenanceDialogContext = null;
-                }
-              });
-              return const SizedBox.shrink();
-            },
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+              Center(
+                child: Text(
+                  'In case of emergency, press the button to alert responders.',
+                  textAlign: TextAlign.center,
+                  style: AppText.small.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 48),
+
+              // AI Assistant Section
+              Text(
+                'AI Assistant',
+                style: AppText.fieldLabel.copyWith(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.borderColor, width: 1),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.shadowLight,
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryMaroon.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            'assets/images/robo_head.webp',
+                            width: 56,
+                            height: 56,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Quick First Aid',
+                            style: AppText.fieldLabel.copyWith(fontSize: 15),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 4),
+                          TextButton(
+                            onPressed: () {
+                              if (mounted) {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) =>
+                                            const ChatBot(request: 'medical'),
+                                  ),
+                                );
+                              }
+                            },
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Get instant safety and first aid tips.',
+                                    style: AppText.small.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.chevron_right,
+                                  color: AppColors.textSecondary,
+                                  size: 25,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 48),
+
+              // Recent Notifications Section
+              Text(
+                'Recent Notifications',
+                style: AppText.fieldLabel.copyWith(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+
+              // Empty State
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 36,
+                  horizontal: 24,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.shadowLight,
+                      blurRadius: 10,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.notifications_none_rounded,
+                      size: 40,
+                      color: AppColors.textLight,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "You're all caught up!",
+                      style: AppText.fieldLabel.copyWith(fontSize: 15),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'No new notifications at the moment.',
+                      style: AppText.small.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
           ),
-        ],
+        ),
       ),
       bottomNavigationBar: const BottomNavbar(currentIndex: 0),
     );
@@ -467,6 +430,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                     case 'Accident':
                       break;
                     case 'Earthquake':
+                      await _handleEarthquakeCheck(label);
                       break;
                   }
                 },
@@ -528,6 +492,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
       final locationResult = await fetchLatLong();
       if (locationResult.error != null) {
         if (mounted) {
+          ref.read(landingPageProvider.notifier).clearActiveButton();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(locationResult.error!),
@@ -545,6 +510,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
       if (floodData.errorMessage != null) {
         if (mounted) {
+          ref.read(landingPageProvider.notifier).clearActiveButton();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(floodData.errorMessage!),
@@ -567,6 +533,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
       }
     } catch (e) {
       if (mounted) {
+        ref.read(landingPageProvider.notifier).clearActiveButton();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Unable to process your request, please try again'),
@@ -574,12 +541,76 @@ class _LandingPageState extends ConsumerState<LandingPage>
           ),
         );
       }
-    } finally {
-      if (mounted) ref.read(landingPageProvider.notifier).clearActiveButton();
+    }
+  }
+
+  Future<void> _handleEarthquakeCheck(String label) async {
+    if (mounted) {
+      ref.read(landingPageProvider.notifier).setActiveButton(label);
+    }
+
+    try {
+      final locationResult = await fetchLatLong();
+      if (locationResult.error != null) {
+        if (mounted) {
+          ref.read(landingPageProvider.notifier).clearActiveButton();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(locationResult.error!),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      final EarthquakeData earthquakeData = await _earthquakeService
+          .getEarthquakeRiskForLocation(
+            locationResult.latitude,
+            locationResult.longitude,
+          );
+
+      if (earthquakeData.errorMessage != null) {
+        if (mounted) {
+          ref.read(landingPageProvider.notifier).clearActiveButton();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(earthquakeData.errorMessage!),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      if (earthquakeData.riskLevel == 'Low Risk' ||
+          earthquakeData.riskLevel == 'Medium Risk' ||
+          earthquakeData.riskLevel == 'High Risk') {
+        await _saveSeverityToDatabase(earthquakeData.riskLevel);
+      }
+
+      if (mounted) {
+        EarthquakeService.showEarthquakeRisk(context, earthquakeData);
+        _showSeverityDialog(earthquakeData.riskLevel, label);
+      }
+    } catch (e) {
+      if (mounted) {
+        ref.read(landingPageProvider.notifier).clearActiveButton();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to process your request, please try again'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
   void _showSeverityDialog(String severity, String label) {
+    // Determine the title based on the emergency type
+    final String title =
+        label == 'Flood' ? 'Flood Risk Detected' : 'Earthquake Risk Detected';
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -618,7 +649,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
                 // Title
                 Text(
-                  'Flood Risk Detected',
+                  title,
                   style: AppText.formTitle.copyWith(fontSize: 20),
                   textAlign: TextAlign.center,
                 ),
@@ -753,79 +784,5 @@ class _LandingPageState extends ConsumerState<LandingPage>
         );
       }
     }
-  }
-
-  void _showMaintenanceDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        // ← Capture the dialog's own BuildContext
-        _maintenanceDialogContext = dialogContext;
-        return PopScope(
-          canPop: false,
-          child: AlertDialog(
-            backgroundColor: AppColors.surfaceLight,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            contentPadding: const EdgeInsets.all(24),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.construction_rounded,
-                    color: AppColors.warning,
-                    size: 48,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'System Maintenance',
-                  style: AppText.formTitle.copyWith(fontSize: 20),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'We are currently performing system maintenance to improve your experience. Please try again later.',
-                  style: AppText.small.copyWith(
-                    color: AppColors.textSecondary,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      SystemNavigator.pop();
-                    },
-                    style: AppButtons.submit,
-                    child: Text(
-                      'Close App',
-                      style: AppText.button.copyWith(
-                        color: AppColors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    ).then((_) {
-      // Clear the reference once the dialog is gone for any reason
-      _maintenanceDialogContext = null;
-    });
   }
 }

@@ -128,7 +128,9 @@ class _SosAlternativeState extends ConsumerState<SosAlternative> {
   }
 
   Widget _buildBody() {
+    if (!mounted) return const SizedBox.shrink();
     final isLoading = ref.watch(sosLoadingProvider);
+    if (!mounted) return const SizedBox.shrink();
     final approvedNgos = ref.watch(approvedNgosProvider);
 
     if (isLoading) {
@@ -178,6 +180,7 @@ class _SosAlternativeState extends ConsumerState<SosAlternative> {
 
     return Consumer(
       builder: (context, ref, child) {
+        if (!mounted) return const SizedBox.shrink();
         final isExpanded = ref.watch(ngoCardExpandedProvider(ngoId));
 
         return Container(
@@ -203,8 +206,10 @@ class _SosAlternativeState extends ConsumerState<SosAlternative> {
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
                   onTap: () {
-                    ref.read(ngoCardExpandedProvider(ngoId).notifier).state =
-                        !isExpanded;
+                    if (mounted) {
+                      ref.read(ngoCardExpandedProvider(ngoId).notifier).state =
+                          !isExpanded;
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(AppSpacing.xl),
@@ -245,12 +250,14 @@ class _SosAlternativeState extends ConsumerState<SosAlternative> {
                             color: AppColors.primaryMaroon,
                           ),
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Chat feature coming soon'),
-                                backgroundColor: AppColors.info,
-                              ),
-                            );
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Chat feature coming soon'),
+                                  backgroundColor: AppColors.info,
+                                ),
+                              );
+                            }
                           },
                         ),
                         const SizedBox(width: 4),

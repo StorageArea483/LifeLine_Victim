@@ -55,6 +55,8 @@ class GoogleSignInService {
             'email': user.email ?? '',
             'photoURL': user.photoURL ?? '',
             'provider': 'google',
+            'blocked': false,
+            'severity': '',
           });
         }
       }

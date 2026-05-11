@@ -6,7 +6,7 @@ import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:life_line/models/victim_map_provider.dart';
+import 'package:life_line/providers/victim_map_provider.dart';
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/widgets/fetch_lat_long.dart';
 import 'package:life_line/widgets/global/bottom_navbar.dart';
@@ -38,6 +38,7 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
       LocationResult fetchedResult = await fetchLatLong();
       if (fetchedResult.error != null) {
         if (mounted) {
+          ref.read(victimMapProvider.notifier).state = false;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(fetchedResult.error!),
@@ -47,11 +48,7 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
         }
         return;
       }
-
-      // Assign to field so the map can move to actual location
       result = fetchedResult;
-
-      // Move camera to real location once available
       _mapController.move(
         LatLng(fetchedResult.latitude, fetchedResult.longitude),
         15,
@@ -89,6 +86,7 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
         }
       } else {
         if (mounted) {
+          ref.read(victimMapProvider.notifier).state = false;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Location found but address is unavailable.'),
@@ -99,16 +97,13 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
       }
     } catch (e) {
       if (mounted) {
+        ref.read(victimMapProvider.notifier).state = false;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Failed to get location, please restart the app.'),
             backgroundColor: AppColors.error,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        ref.read(victimMapProvider.notifier).state = false;
       }
     }
   }
