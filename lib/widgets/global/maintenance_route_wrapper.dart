@@ -11,11 +11,11 @@ class MaintenanceRouteWrapper extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!context.mounted) return const SizedBox.shrink();
-    final maintenanceAsync = ref.watch(maintenanceStreamProvider);
+    final settings = ref.watch(adminSettingsStreamProvider);
 
-    return maintenanceAsync.when(
-      data: (isMaintenance) {
-        return isMaintenance ? const MaintenancePage() : const LandingPage();
+    return settings.when(
+      data: (s) {
+        return s.maintenance ? const MaintenancePage() : const LandingPage();
       },
       loading:
           () => const Scaffold(

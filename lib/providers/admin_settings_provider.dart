@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:life_line/models/admin_settings.dart';
 
 // Firebase configuration for life-line-admin
 const FirebaseOptions _adminFirebaseOptions = FirebaseOptions(
@@ -12,66 +13,30 @@ const FirebaseOptions _adminFirebaseOptions = FirebaseOptions(
   storageBucket: 'life-line-admin.firebasestorage.app',
 );
 
-// StreamProvider to fetch sos disabled setting from life-line-admin
-final sosDisabledStreamProvider = StreamProvider<bool>((ref) async* {
+final adminSettingsStreamProvider = StreamProvider<AdminSettings>((ref) async* {
+  // outer stream
+  FirebaseApp adminApp;
   try {
-    // Initialize life-line-admin Firebase app
-    FirebaseApp adminApp;
-    try {
-      adminApp = Firebase.app('life-line-admin');
-    } catch (e) {
-      adminApp = await Firebase.initializeApp(
-        name: 'life-line-admin',
-        options: _adminFirebaseOptions,
-      );
-    }
-
-    final adminFirestore = FirebaseFirestore.instanceFor(app: adminApp);
-
-    // Stream settings collection and extract sos disabled value
-    await for (final snapshot
-        in adminFirestore.collection('settings').snapshots()) {
-      if (snapshot.docs.isNotEmpty) {
-        final settingsData = snapshot.docs.first.data();
-        final sosDisabled = settingsData['sos disabled'] ?? false;
-        yield sosDisabled;
-      } else {
-        yield false; // Default to false if no settings document exists
-      }
-    }
-  } catch (e) {
-    yield false; // Default to false on error
+    adminApp = Firebase.app('life-line-admin');
+  } catch (_) {
+    adminApp = await Firebase.initializeApp(
+      name: 'life-line-admin',
+      options: _adminFirebaseOptions,
+    );
   }
-});
-
-// StreamProvider to fetch maintenance setting from life-line-admin
-final maintenanceStreamProvider = StreamProvider<bool>((ref) async* {
-  try {
-    // Initialize life-line-admin Firebase app
-    FirebaseApp adminApp;
-    try {
-      adminApp = Firebase.app('life-line-admin');
-    } catch (e) {
-      adminApp = await Firebase.initializeApp(
-        name: 'life-line-admin',
-        options: _adminFirebaseOptions,
-      );
+  /* The data is passed from inner stream back to outer stream and outer stream updates the UI 
+    because it is a Stream Provider */
+  yield* FirebaseFirestore.instanceFor(
+    // inner stream
+    app: adminApp,
+  ).collection('settings').snapshots().map((snapshot) {
+    if (snapshot.docs.isEmpty) {
+      return const AdminSettings(sosDisabled: false, maintenance: false);
     }
-
-    final adminFirestore = FirebaseFirestore.instanceFor(app: adminApp);
-
-    // Stream settings collection and extract maintenance value
-    await for (final snapshot
-        in adminFirestore.collection('settings').snapshots()) {
-      if (snapshot.docs.isNotEmpty) {
-        final settingsData = snapshot.docs.first.data();
-        final maintenance = settingsData['maintenance'] ?? false;
-        yield maintenance;
-      } else {
-        yield false; // Default to false if no settings document exists
-      }
-    }
-  } catch (e) {
-    yield false; // Default to false on error
-  }
+    final data = snapshot.docs.first.data();
+    return AdminSettings(
+      sosDisabled: data['sos disabled'] ?? false,
+      maintenance: data['maintenance'] ?? false,
+    );
+  });
 });

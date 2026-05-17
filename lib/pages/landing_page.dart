@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line/models/flood_data.dart';
@@ -11,7 +10,6 @@ import 'package:life_line/widgets/global/bottom_navbar.dart';
 import 'package:life_line/services/google_flood_service.dart';
 import 'package:life_line/services/earthquake_service.dart';
 import 'package:life_line/widgets/fetch_lat_long.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LandingPage extends ConsumerStatefulWidget {
   const LandingPage({super.key});
@@ -492,7 +490,6 @@ class _LandingPageState extends ConsumerState<LandingPage>
       final locationResult = await fetchLatLong();
       if (locationResult.error != null) {
         if (mounted) {
-          ref.read(landingPageProvider.notifier).clearActiveButton();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(locationResult.error!),
@@ -510,7 +507,6 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
       if (floodData.errorMessage != null) {
         if (mounted) {
-          ref.read(landingPageProvider.notifier).clearActiveButton();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(floodData.errorMessage!),
@@ -521,26 +517,26 @@ class _LandingPageState extends ConsumerState<LandingPage>
         return;
       }
 
-      if (floodData.riskLevel == 'Low Risk' ||
-          floodData.riskLevel == 'Medium Risk' ||
-          floodData.riskLevel == 'High Risk') {
-        await _saveSeverityToDatabase(floodData.riskLevel);
-      }
-
       if (mounted) {
-        FloodService.showFloodRisk(context, floodData);
-        _showSeverityDialog(floodData.riskLevel, label);
+        _showSeverityDialog(
+          floodData.riskLevel,
+          label,
+          intensity: floodData.rainMm,
+        );
       }
     } catch (e) {
       if (mounted) {
-        ref.read(landingPageProvider.notifier).clearActiveButton();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to process your request, please try again'),
+          SnackBar(
+            content: Text(
+              'Unable to process your request, please try again $e',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
       }
+    } finally {
+      ref.read(landingPageProvider.notifier).clearActiveButton();
     }
   }
 
@@ -553,7 +549,6 @@ class _LandingPageState extends ConsumerState<LandingPage>
       final locationResult = await fetchLatLong();
       if (locationResult.error != null) {
         if (mounted) {
-          ref.read(landingPageProvider.notifier).clearActiveButton();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(locationResult.error!),
@@ -572,7 +567,6 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
       if (earthquakeData.errorMessage != null) {
         if (mounted) {
-          ref.read(landingPageProvider.notifier).clearActiveButton();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(earthquakeData.errorMessage!),
@@ -583,19 +577,15 @@ class _LandingPageState extends ConsumerState<LandingPage>
         return;
       }
 
-      if (earthquakeData.riskLevel == 'Low Risk' ||
-          earthquakeData.riskLevel == 'Medium Risk' ||
-          earthquakeData.riskLevel == 'High Risk') {
-        await _saveSeverityToDatabase(earthquakeData.riskLevel);
-      }
-
       if (mounted) {
-        EarthquakeService.showEarthquakeRisk(context, earthquakeData);
-        _showSeverityDialog(earthquakeData.riskLevel, label);
+        _showSeverityDialog(
+          earthquakeData.riskLevel,
+          label,
+          magnitude: earthquakeData.magnitude,
+        );
       }
     } catch (e) {
       if (mounted) {
-        ref.read(landingPageProvider.notifier).clearActiveButton();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Unable to process your request, please try again'),
@@ -603,13 +593,37 @@ class _LandingPageState extends ConsumerState<LandingPage>
           ),
         );
       }
+    } finally {
+      ref.read(landingPageProvider.notifier).clearActiveButton();
     }
   }
 
-  void _showSeverityDialog(String severity, String label) {
-    // Determine the title based on the emergency type
+  void _showSeverityDialog(
+    String severity,
+    String label, {
+    double? magnitude,
+    double? intensity,
+  }) {
+    final bool isLowRisk = severity == 'Low Risk';
+
     final String title =
-        label == 'Flood' ? 'Flood Risk Detected' : 'Earthquake Risk Detected';
+        isLowRisk
+            ? (label == 'Flood'
+                ? 'No Flood Risk Detected'
+                : 'No Earthquake Risk Detected')
+            : (label == 'Flood'
+                ? 'Flood Risk Detected'
+                : 'Earthquake Risk Detected');
+
+    final IconData icon =
+        severity == 'High Risk'
+            ? Icons.warning
+            : (isLowRisk ? Icons.check_circle : Icons.info_outline);
+
+    final Color iconColor =
+        severity == 'High Risk'
+            ? AppColors.error
+            : (isLowRisk ? AppColors.success : AppColors.warning);
 
     showDialog(
       context: context,
@@ -628,22 +642,10 @@ class _LandingPageState extends ConsumerState<LandingPage>
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color:
-                        severity == 'High Risk'
-                            ? AppColors.error.withOpacity(0.1)
-                            : AppColors.warning.withOpacity(0.1),
+                    color: iconColor.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    severity == 'High Risk'
-                        ? Icons.warning
-                        : Icons.info_outline,
-                    color:
-                        severity == 'High Risk'
-                            ? AppColors.error
-                            : AppColors.warning,
-                    size: 48,
-                  ),
+                  child: Icon(icon, color: iconColor, size: 48),
                 ),
                 const SizedBox(height: 20),
 
@@ -662,16 +664,10 @@ class _LandingPageState extends ConsumerState<LandingPage>
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color:
-                        severity == 'High Risk'
-                            ? AppColors.error.withOpacity(0.1)
-                            : AppColors.warning.withOpacity(0.1),
+                    color: iconColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color:
-                          severity == 'High Risk'
-                              ? AppColors.error.withOpacity(0.3)
-                              : AppColors.warning.withOpacity(0.3),
+                      color: iconColor.withOpacity(0.3),
                       width: 1,
                     ),
                   ),
@@ -681,13 +677,41 @@ class _LandingPageState extends ConsumerState<LandingPage>
                       fontFamily: 'SFPro',
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color:
-                          severity == 'High Risk'
-                              ? AppColors.error
-                              : AppColors.warning,
+                      color: iconColor,
                     ),
                   ),
                 ),
+
+                // Show magnitude or intensity if available
+                if (magnitude != null || intensity != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.textSecondary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.textSecondary.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      magnitude != null
+                          ? 'Magnitude: ${magnitude.toStringAsFixed(1)}'
+                          : 'Rain Intensity: ${intensity!.toStringAsFixed(1)}',
+                      style: const TextStyle(
+                        fontFamily: 'SFPro',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 16),
 
                 // Description
@@ -701,7 +725,6 @@ class _LandingPageState extends ConsumerState<LandingPage>
                 ),
                 const SizedBox(height: 24),
 
-                // Buttons
                 Row(
                   children: [
                     Expanded(
@@ -739,7 +762,11 @@ class _LandingPageState extends ConsumerState<LandingPage>
                           if (mounted) {
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
-                                builder: (context) => ChatBot(request: label),
+                                builder:
+                                    (context) => ChatBot(
+                                      request: label,
+                                      severity: severity,
+                                    ),
                               ),
                             );
                           }
@@ -764,25 +791,5 @@ class _LandingPageState extends ConsumerState<LandingPage>
             ),
           ),
     );
-  }
-
-  Future<void> _saveSeverityToDatabase(String severity) async {
-    try {
-      final String? uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid == null || uid.isEmpty) return;
-
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
-        'severity': severity,
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unexpected error occurred, please restart the app'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
   }
 }

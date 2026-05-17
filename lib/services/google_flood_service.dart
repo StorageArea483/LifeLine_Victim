@@ -10,7 +10,6 @@ class FloodService {
   static const double _heavyRain = 40.0; // High Risk
   static const double _moderateRain = 20.0; // Medium Risk
 
-  // Fetch current rain (mm/hour) at location
   Future<double?> _fetchRain(double lat, double lng) async {
     final url = Uri.parse(_weatherUrl).replace(
       queryParameters: {
@@ -41,7 +40,6 @@ class FloodService {
     return 'Low Risk';
   }
 
-  // Main method: Get flood risk for GPS location
   Future<FloodData> getFloodRiskForLocation(
     double latitude,
     double longitude,

@@ -11,11 +11,11 @@ class SosRouteWrapper extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!context.mounted) return const SizedBox.shrink();
-    final sosDisabledAsync = ref.watch(sosDisabledStreamProvider);
+    final settings = ref.watch(adminSettingsStreamProvider);
 
-    return sosDisabledAsync.when(
-      data: (sosDisabled) {
-        return sosDisabled
+    return settings.when(
+      data: (s) {
+        return s.sosDisabled
             ? const SosAlternative()
             : const MaintenanceRouteWrapper();
       },

@@ -11,11 +11,12 @@ import 'package:life_line/providers/chat_bot_provider.dart';
 
 import 'package:life_line/styles/styles.dart';
 import 'package:life_line/models/message.dart';
+import 'package:life_line/services/severity_service.dart';
 
 class ChatBot extends ConsumerStatefulWidget {
   final String? request; // "flood", "earthquake", "medical"
-
-  const ChatBot({super.key, this.request});
+  final String? severity;
+  const ChatBot({super.key, this.request, this.severity});
 
   @override
   ConsumerState<ChatBot> createState() => _ChatBotState();
@@ -29,6 +30,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   bool _speechInitialized = false;
 
   final List<Map<String, String>> _conversationHistory = [];
+  bool _severityUpdated = false; // Track if severity has been updated
 
   @override
   void initState() {
@@ -186,6 +188,9 @@ class _ChatBotState extends ConsumerState<ChatBot> {
           ref.read(chatPageProvider.notifier).setLoading(false);
         }
         _scrollToBottom();
+
+        // Check if conversation is complete and update severity
+        await _checkAndUpdateSeverity();
       } else {
         _handleError('Failed to get response, please try again');
       }
@@ -253,6 +258,81 @@ class _ChatBotState extends ConsumerState<ChatBot> {
         );
       }
     });
+  }
+
+  /// Checks if the conversation is complete and updates severity in database
+  Future<void> _checkAndUpdateSeverity() async {
+    // Only update once per conversation
+    if (_severityUpdated) return;
+
+    // Only process for structured requests (flood/earthquake)
+    final currentRequest = widget.request;
+    if (currentRequest == null ||
+        (currentRequest.toLowerCase() != 'flood' &&
+            currentRequest.toLowerCase() != 'earthquake')) {
+      return;
+    }
+
+    // Check if we've reached the end of the conversation flow
+    if (!mounted) return;
+    final currentStep = ref.read(chatPageProvider).currentStep;
+    List<List<String>> answerOptions;
+
+    switch (currentRequest.toLowerCase()) {
+      case 'flood':
+        answerOptions = GrokClient.floodAnswers;
+        break;
+      case 'earthquake':
+        answerOptions = GrokClient.earthquakeAnswers;
+        break;
+      default:
+        return;
+    }
+
+    // If we've completed all steps, extract and compare severities
+    if (currentStep > answerOptions.length - 1) {
+      try {
+        // Extract severity from chatbot conversation
+        final chatbotSeverity = SeverityService.extractSeverityFromConversation(
+          _conversationHistory,
+        );
+
+        // Compare with initial severity from detection service
+        final finalSeverity = SeverityService.compareSeverities(
+          initialSeverity: widget.severity,
+          chatbotSeverity: chatbotSeverity,
+        );
+
+        // Update in database
+        await SeverityService.updateUserSeverity(finalSeverity);
+
+        _severityUpdated = true;
+
+        // Show confirmation to user
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Severity Status: $finalSeverity')),
+          );
+        }
+      } catch (e) {
+        // Log error but don't disrupt user experience
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.warning, color: Colors.white),
+                  SizedBox(width: 12),
+                  Expanded(child: Text('Unable to save severity assessment')),
+                ],
+              ),
+              backgroundColor: AppColors.warning,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
   }
 
   void _handleOptionTap(String option) {
@@ -385,6 +465,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
                                   'role': 'system',
                                   'content': GrokClient.systemPrompt,
                                 });
+                                _severityUpdated = false;
                                 if (mounted) {
                                   ref.invalidate(chatPageProvider);
                                 }
