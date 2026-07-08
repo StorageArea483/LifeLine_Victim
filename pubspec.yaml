@@ -1,0 +1,56 @@
+name: life_line_victim
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ">=3.7.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cloud_firestore: ^6.0.3
+  firebase_core: ^4.2.0
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  flutter_riverpod: ^3.3.1
+  firebase_auth: ^6.3.0
+  google_sign_in: ^7.2.0
+  connectivity_plus: ^6.1.5
+  direct_dialer: ^2.0.1
+  speech_to_text: ^7.3.0
+  
+  #For OpenStreetMap
+  latlong2: ^0.9.1   
+  flutter_map: ^8.3.1
+  flutter_map_location_marker: ^10.1.0
+  http: ^1.6.0
+  flutter_polyline_points: ^3.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Assets
+  assets:
+    - assets/images/
+    - assets/offline_logos/
+    - assets/fonts/
+
+
+  # Fonts
+  fonts:
+    - family: SFPro
+      fonts:
+        - asset: assets/fonts/SFPRODISPLAYREGULAR.OTF
+          weight: 400
+        - asset: assets/fonts/SFPRODISPLAYMEDIUM.OTF
+          weight: 500
+        - asset: assets/fonts/SFPRODISPLAYSEMIBOLDITALIC.OTF
+          weight: 600
+        - asset: assets/fonts/SFPRODISPLAYBOLD.OTF
+          weight: 700

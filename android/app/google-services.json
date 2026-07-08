@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "503939690280",
+    "project_id": "project-life-line",
+    "storage_bucket": "project-life-line.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:503939690280:android:dc1b4cdde050a2cc792a1d",
+        "android_client_info": {
+          "package_name": "com.example.life_line_victim"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "503939690280-i7p6d498d3qm6a414h2t1m1n8j892bgt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.life_line_victim",
+            "certificate_hash": "0fce8d6a092574e06f67051e6b0dc64bf68a257f"
+          }
+        },
+        {
+          "client_id": "503939690280-fob6sftr9pe7rl0nvn4o5lkclk8fn96e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyByihQ3YBdrJUrAAxFSX3257fUMa0AJ6uo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "503939690280-fob6sftr9pe7rl0nvn4o5lkclk8fn96e.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "503939690280-j4b2pshfpnqb7al8jvgrmbk9q8vhlnfc.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.lifeLine"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
