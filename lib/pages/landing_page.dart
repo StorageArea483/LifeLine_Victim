@@ -73,14 +73,6 @@ class _LandingPageState extends ConsumerState<LandingPage>
             ),
             onPressed: () => GoogleSignInService.signOut(context),
           ),
-          IconButton(
-            icon: Icon(
-              Icons.notifications_active_outlined,
-              color: AppColors.textSecondary,
-              size: ResponsiveHelper.iconSize(context),
-            ),
-            onPressed: () => GoogleSignInService.signOut(context),
-          ),
         ],
       ),
       body: SafeArea(
@@ -462,74 +454,6 @@ class _LandingPageState extends ConsumerState<LandingPage>
                           ),
                         ],
                       ),
-                    ),
-
-                    SizedBox(
-                      height: ResponsiveHelper.isTablet(context) ? 64 : 48,
-                    ),
-
-                    // Recent Notifications Section
-                    Text(
-                      'Recent Notifications',
-                      style: AppText.fieldLabel.copyWith(
-                        fontSize: ResponsiveHelper.isTablet(context) ? 22 : 16,
-                      ),
-                    ),
-                    SizedBox(
-                      height: ResponsiveHelper.isTablet(context) ? 24 : 16,
-                    ),
-
-                    // Empty State
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.symmetric(
-                        vertical: ResponsiveHelper.isTablet(context) ? 48 : 36,
-                        horizontal:
-                            ResponsiveHelper.isTablet(context) ? 32 : 24,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: AppColors.shadowLight,
-                            blurRadius: 10,
-                            offset: Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.notifications_none_rounded,
-                            size: ResponsiveHelper.isTablet(context) ? 56 : 40,
-                            color: AppColors.textLight,
-                          ),
-                          SizedBox(
-                            height:
-                                ResponsiveHelper.isTablet(context) ? 16 : 12,
-                          ),
-                          Text(
-                            "You're all caught up!",
-                            style: AppText.fieldLabel.copyWith(
-                              fontSize:
-                                  ResponsiveHelper.isTablet(context) ? 18 : 15,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'No new notifications at the moment.',
-                            style: AppText.small.copyWith(
-                              color: AppColors.textSecondary,
-                              fontSize: ResponsiveHelper.bodyFont(context),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      height: ResponsiveHelper.isTablet(context) ? 48 : 32,
                     ),
                   ],
                 ),

@@ -12,7 +12,6 @@ import 'package:life_line_victim/pages/victim_waiting_screen.dart';
 import 'package:life_line_victim/providers/app_router_provider.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/pages/victim_blocked_dialog.dart';
-import 'package:life_line_victim/widgets/global/page_message.dart';
 
 class CheckConnection extends ConsumerStatefulWidget {
   const CheckConnection({super.key});
@@ -73,11 +72,7 @@ class _CheckConnectionState extends ConsumerState<CheckConnection>
         ref.read(requestTypeProvider.notifier).state = fetchedType;
       }
     } catch (e) {
-      pageMessage(
-        'An unexpected error occurred please retry',
-        context,
-        AppColors.error,
-      );
+      // ignore errors
     }
   }
 

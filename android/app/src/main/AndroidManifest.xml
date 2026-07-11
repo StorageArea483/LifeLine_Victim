@@ -1,37 +1,35 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Location Permissions -->
+    <!-- Location -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-
-    <!-- Foreground Location Service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
 
-    <!-- Phone Permission -->
+    <!-- Phone -->
     <uses-permission android:name="android.permission.CALL_PHONE"/>
 
 
-    <!-- Microphone / Speech Recognition -->
+    <!-- Microphone / Speech -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
 
-    <!-- Network Permissions -->
+    <!-- Network -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 
 
-    <!-- Bluetooth Permissions -->
+    <!-- Bluetooth -->
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
 
 
     <application
-        android:label="life_line_victim"
+        android:label="LifeLine"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
@@ -61,14 +59,13 @@
         </activity>
 
 
-        <!-- Geolocator Foreground Location Service -->
+        <!-- geolocator package -->
         <service
             android:name="com.baseflow.geolocator.service.GeolocationService"
             android:foregroundServiceType="location"
             android:exported="false" />
 
 
-        <!-- Flutter embedding -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
@@ -76,27 +73,17 @@
     </application>
 
 
-    <!-- Package Visibility Queries -->
     <queries>
-
-        <!-- Speech Recognition -->
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
-
-
-        <!-- Google Sign In / Custom Tabs -->
         <intent>
             <action android:name="android.support.customtabs.action.CustomTabsService" />
         </intent>
-
-
-        <!-- Flutter Text Processing -->
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-
     </queries>
 
 
