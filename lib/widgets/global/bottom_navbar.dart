@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:life_line_victim/pages/chat_bot.dart';
 import 'package:life_line_victim/pages/landing_page.dart';
+import 'package:life_line_victim/pages/victim_contact_page.dart';
 import 'package:life_line_victim/pages/victim_map_page.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
@@ -23,6 +24,8 @@ class BottomNavbar extends StatelessWidget {
           pageNavigation(const VictimMapPage(), context);
         } else if (index == 2 && context.mounted) {
           pageNavigation(const ChatBot(request: 'medical'), context);
+        } else if (index == 3 && context.mounted) {
+          pageNavigation(const VictimContactPage(), context);
         }
       },
       type: BottomNavigationBarType.fixed,
@@ -47,7 +50,7 @@ class BottomNavbar extends StatelessWidget {
           label: 'Chatbot',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.chat_sharp),
+          icon: Icon(Icons.chat_outlined),
           activeIcon: Icon(Icons.chat_bubble),
           label: 'Chat',
         ),

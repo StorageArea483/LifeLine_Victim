@@ -141,14 +141,18 @@ class _SosAlternativeState extends ConsumerState<SosAlternative> {
         child: Center(
           child: SizedBox(
             width: ResponsiveHelper.contentWidth(context),
-            child: _buildBody(),
+            child: Consumer(
+              builder: (context, ref, child) {
+                return _buildBody(ref);
+              },
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(WidgetRef ref) {
     final isLoading = ref.watch(loadingProvider);
     final approvedNgos = ref.watch(approvedNgosProvider);
 

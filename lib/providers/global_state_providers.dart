@@ -27,6 +27,6 @@ class GlobalState {
 }
 
 final globalStateProvider =
-    StateNotifierProvider<GlobalStateNotifier, GlobalState>((ref) {
+    StateNotifierProvider.autoDispose<GlobalStateNotifier, GlobalState>((ref) {
       return GlobalStateNotifier();
     });

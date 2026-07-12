@@ -364,7 +364,11 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
         children: [
           _buildTileLayer(),
           _buildRescuerMarker(),
-          _buildRoutePolyline(),
+          Consumer(
+            builder: (context, ref, child) {
+              return _buildRoutePolyline(ref);
+            },
+          ),
           _buildCurrentLocationLayer(),
         ],
       );
@@ -410,7 +414,7 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
     );
   }
 
-  Widget _buildRoutePolyline() {
+  Widget _buildRoutePolyline(WidgetRef ref) {
     return Consumer(
       builder: (context, ref, child) {
         if (!mounted) {
