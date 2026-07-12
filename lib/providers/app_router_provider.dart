@@ -2,7 +2,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:life_line_victim/providers/admin_settings_provider.dart';
-import 'package:life_line_victim/providers/auth_provider.dart';
 import 'package:life_line_victim/providers/internet_provider.dart';
 import 'package:life_line_victim/providers/request_status_provider.dart';
 import 'package:life_line_victim/providers/user_status_provider.dart';
@@ -19,15 +18,13 @@ enum AppRoute {
 }
 
 final appRouterProvider = Provider<AppRoute>((ref) {
-  final auth = ref.watch(authStateProvider);
   final internet = ref.watch(internetProvider);
   final userStatus = ref.watch(userStatusStreamProvider);
   final settings = ref.watch(adminSettingsStreamProvider);
   final requestExists = ref.watch(requestExistsStreamProvider);
 
   // Loading
-  if (auth.isLoading ||
-      internet.isLoading ||
+  if (internet.isLoading ||
       userStatus.isLoading ||
       settings.isLoading ||
       requestExists.isLoading) {
@@ -39,13 +36,6 @@ final appRouterProvider = Provider<AppRoute>((ref) {
 
   if (connectivity == null || connectivity.contains(ConnectivityResult.none)) {
     return AppRoute.offline;
-  }
-
-  // Login
-  final user = auth.value;
-
-  if (user == null) {
-    return AppRoute.login;
   }
 
   // User Status

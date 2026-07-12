@@ -10,6 +10,7 @@ import 'dart:io' show Platform;
 
 import 'package:life_line_victim/utils/responsive_helper.dart';
 import 'package:life_line_victim/widgets/global/bottom_navbar.dart';
+import 'package:life_line_victim/widgets/global/ngo_chat_screen.dart';
 import 'package:life_line_victim/widgets/global/page_loading.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
@@ -24,6 +25,7 @@ class VictimContactPage extends ConsumerStatefulWidget {
 
 class _VictimContactPageState extends ConsumerState<VictimContactPage> {
   FirebaseFirestore? rescuerFirestore;
+  FirebaseFirestore? ngoFirestore;
 
   // life-line-rescuer database credentials
   static const FirebaseOptions _rescuerAndroidOptions = FirebaseOptions(
@@ -43,6 +45,15 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
     iosBundleId: 'com.example.lifeLineRescuer',
   );
 
+  static const FirebaseOptions _ngoFirebaseOptions = FirebaseOptions(
+    apiKey: 'AIzaSyBeieryGaw4bh4dtbrI54qsIc51XkP6SoM',
+    appId: '1:169949190544:web:2640453ce5dd2aa55d3b15',
+    messagingSenderId: '169949190544',
+    projectId: 'life-line-ngo',
+    authDomain: 'life-line-ngo.firebaseapp.com',
+    storageBucket: 'life-line-ngo.firebasestorage.app',
+  );
+
   @override
   void initState() {
     super.initState();
@@ -57,6 +68,7 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
     }
     try {
       FirebaseApp rescuerApp;
+      FirebaseApp ngoApp;
 
       // Rescuer Firebase
       try {
@@ -70,7 +82,20 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
 
       rescuerFirestore = FirebaseFirestore.instanceFor(app: rescuerApp);
 
+      // NGO Firebase
+      try {
+        ngoApp = Firebase.app('life-line-ngo');
+      } catch (_) {
+        ngoApp = await Firebase.initializeApp(
+          name: 'life-line-ngo',
+          options: _ngoFirebaseOptions,
+        );
+      }
+
+      ngoFirestore = FirebaseFirestore.instanceFor(app: ngoApp);
+
       await _fetchAssignedRescuer();
+      await _fetchAssignedNgo();
 
       if (mounted) {
         ref.read(victimContactLoadingProvider.notifier).state = false;
@@ -131,6 +156,40 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
     }
   }
 
+  Future<void> _fetchAssignedNgo() async {
+    if (ngoFirestore == null) return;
+
+    try {
+      final victimId = FirebaseAuth.instance.currentUser?.uid;
+      if (victimId == null) return;
+
+      final requestDoc =
+          await ngoFirestore!.collection('requests').doc(victimId).get();
+
+      if (!requestDoc.exists) return;
+
+      final ngoId = requestDoc.data()?['ngoId'];
+      if (ngoId == null || ngoId.toString().isEmpty) return;
+
+      final ngoDoc =
+          await ngoFirestore!.collection('ngo-info-database').doc(ngoId).get();
+
+      if (!ngoDoc.exists) return;
+
+      final data = ngoDoc.data()!;
+
+      if (mounted) {
+        ref.read(assignedNgoProvider.notifier).state = {
+          'id': ngoId,
+          'ngoName': data['ngoName'] ?? 'Unknown NGO',
+          'geographicalCoverage': data['geographicalCoverage'] ?? 'N/A',
+        };
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -169,12 +228,13 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
   Widget _buildBody(WidgetRef ref) {
     final isLoading = ref.watch(victimContactLoadingProvider);
     final rescuer = ref.watch(assignedRescuerProvider);
+    final ngo = ref.watch(assignedNgoProvider);
 
     if (isLoading) {
       return pageLoading(context);
     }
 
-    if (rescuer == null) {
+    if (rescuer == null && ngo == null) {
       return Center(
         child: Padding(
           padding: EdgeInsets.all(ResponsiveHelper.isTablet(context) ? 48 : 32),
@@ -188,7 +248,7 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
               ),
               SizedBox(height: ResponsiveHelper.isTablet(context) ? 24 : 16),
               Text(
-                'No rescuer assigned yet',
+                'No contacts assigned yet',
                 style: AppText.subtitle.copyWith(
                   fontSize: ResponsiveHelper.titleFont(context),
                 ),
@@ -200,12 +260,12 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
       );
     }
 
-    return ListView.builder(
+    return ListView(
       padding: EdgeInsets.all(ResponsiveHelper.isTablet(context) ? 32 : 16),
-      itemCount: 1,
-      itemBuilder: (context, index) {
-        return _buildRescuerCard(rescuer);
-      },
+      children: [
+        if (rescuer != null) _buildRescuerCard(rescuer),
+        if (ngo != null) _buildNgoCard(ngo),
+      ],
     );
   }
 
@@ -316,6 +376,93 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
               // Calling logic to be implemented later
             },
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNgoCard(Map<String, dynamic> ngo) {
+    final ngoName = ngo['ngoName'] ?? 'Unknown NGO';
+    final geographicalCoverage = ngo['geographicalCoverage'] ?? 'N/A';
+
+    return Container(
+      margin: EdgeInsets.only(
+        bottom: ResponsiveHelper.isTablet(context) ? 24 : 16,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.primaryMaroon.withOpacity(0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.darkCharcoal.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: GestureDetector(
+        onTap: () {
+          pageNavigation(
+            NgoChatScreen(ngoId: ngo['ngoId'] ?? '', ngoName: ngoName),
+            context,
+          );
+        },
+        child: ListTile(
+          contentPadding: EdgeInsets.all(
+            ResponsiveHelper.isTablet(context) ? 24 : 16,
+          ),
+          leading: _buildNgoLogo(ngoName),
+          title: Text(
+            ngoName,
+            style: AppText.fieldLabel.copyWith(
+              fontSize: ResponsiveHelper.isTablet(context) ? 20 : 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.darkCharcoal,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              geographicalCoverage,
+              style: AppText.small.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: ResponsiveHelper.bodyFont(context),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNgoLogo(String ngoName) {
+    return Container(
+      width: ResponsiveHelper.isTablet(context) ? 72 : 48,
+      height: ResponsiveHelper.isTablet(context) ? 72 : 48,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderColor, width: 1),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          'assets/offline_logos/$ngoName.webp',
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: AppColors.primaryMaroon.withOpacity(0.1),
+              child: Icon(
+                Icons.business,
+                color: AppColors.primaryMaroon,
+                size: ResponsiveHelper.isTablet(context) ? 36 : 24,
+              ),
+            );
+          },
         ),
       ),
     );

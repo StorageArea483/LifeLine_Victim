@@ -6,55 +6,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line_victim/pages/landing_page.dart';
 import 'package:life_line_victim/pages/victim_contact_page.dart';
-import 'package:life_line_victim/providers/victim_chat_provider.dart';
+import 'package:life_line_victim/providers/ngo_chat_provider.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/utils/responsive_helper.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
-import 'dart:io' show Platform;
 
-class VictimChatScreen extends ConsumerStatefulWidget {
-  final String rescuerId;
-  final String rescuerName;
-  final String rescuerPhotoUrl;
+class NgoChatScreen extends ConsumerStatefulWidget {
+  final String ngoId;
+  final String ngoName;
 
-  const VictimChatScreen({
-    super.key,
-    required this.rescuerId,
-    required this.rescuerName,
-    required this.rescuerPhotoUrl,
-  });
+  const NgoChatScreen({super.key, required this.ngoId, required this.ngoName});
 
   @override
-  ConsumerState<VictimChatScreen> createState() => _VictimChatScreenState();
+  ConsumerState<NgoChatScreen> createState() => _NgoChatScreenState();
 }
 
-class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
+class _NgoChatScreenState extends ConsumerState<NgoChatScreen> {
   final TextEditingController _messageController = TextEditingController();
-  FirebaseFirestore? rescuerFirestore;
+  FirebaseFirestore? ngoFirestore;
 
   StreamSubscription? _messageSubscription;
-  StreamSubscription? _presenceSubscription;
 
   String? currentUserId;
   String? chatId;
 
-  // life-line-rescuer database credentials
-  static const FirebaseOptions _rescuerAndroidOptions = FirebaseOptions(
-    apiKey: 'AIzaSyDs-CoAc_fqrB-3BMl4N7pYSavyNV72zUQ',
-    appId: '1:494066243537:android:ffdb36137d6d3cb1a4b2f0',
-    messagingSenderId: '494066243537',
-    projectId: 'life-line-rescuer-b1f1c',
-    storageBucket: 'life-line-rescuer-b1f1c.firebasestorage.app',
-  );
-
-  static const FirebaseOptions _rescuerIosOptions = FirebaseOptions(
-    apiKey: 'AIzaSyA3cUXkIjLsHhTv2l3OKhNzE3EZtejqxLg',
-    appId: '1:494066243537:ios:8f122b25432725a6a4b2f0',
-    messagingSenderId: '494066243537',
-    projectId: 'life-line-rescuer-b1f1c',
-    storageBucket: 'life-line-rescuer-b1f1c.firebasestorage.app',
-    iosBundleId: 'com.example.lifeLineRescuer',
+  // life-line-ngo database credentials
+  static const FirebaseOptions _ngoFirebaseOptions = FirebaseOptions(
+    apiKey: 'AIzaSyBeieryGaw4bh4dtbrI54qsIc51XkP6SoM',
+    appId: '1:169949190544:web:2640453ce5dd2aa55d3b15',
+    messagingSenderId: '169949190544',
+    projectId: 'life-line-ngo',
+    authDomain: 'life-line-ngo.firebaseapp.com',
+    storageBucket: 'life-line-ngo.firebasestorage.app',
   );
 
   @override
@@ -69,36 +53,35 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
   void dispose() {
     _messageController.dispose();
     _messageSubscription?.cancel();
-    _presenceSubscription?.cancel();
     super.dispose();
   }
 
   // Builds a deterministic chat id from the two participant ids
-  String _generateChatId(String userId, String rescuerId) {
-    final ids = [userId, rescuerId]..sort();
+  String _generateChatId(String userId, String ngoId) {
+    final ids = [userId, ngoId]..sort();
     return '${ids[0]}_${ids[1]}';
   }
 
   Future<void> _initializeChat() async {
     if (mounted) {
-      ref.read(victimChatLoadingProvider.notifier).state = true;
+      ref.read(ngoChatLoadingProvider.notifier).state = true;
     }
     try {
-      FirebaseApp rescuerApp;
+      FirebaseApp ngoApp;
       try {
-        rescuerApp = Firebase.app('life-line-rescuer');
+        ngoApp = Firebase.app('life-line-ngo');
       } catch (_) {
-        rescuerApp = await Firebase.initializeApp(
-          name: 'life-line-rescuer',
-          options: Platform.isIOS ? _rescuerIosOptions : _rescuerAndroidOptions,
+        ngoApp = await Firebase.initializeApp(
+          name: 'life-line-ngo',
+          options: _ngoFirebaseOptions,
         );
       }
-      rescuerFirestore = FirebaseFirestore.instanceFor(app: rescuerApp);
+      ngoFirestore = FirebaseFirestore.instanceFor(app: ngoApp);
 
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) {
         if (mounted) {
-          ref.read(victimChatLoadingProvider.notifier).state = false;
+          ref.read(ngoChatLoadingProvider.notifier).state = false;
           pageMessage(
             'Unable to load chat. Please re-try.',
             context,
@@ -111,20 +94,19 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
 
       currentUserId = userId;
 
-      final chatId = _generateChatId(userId, widget.rescuerId);
+      final chatId = _generateChatId(userId, widget.ngoId);
       if (mounted) {
-        ref.read(victimChatIdProvider.notifier).state = chatId;
+        ref.read(ngoChatIdProvider.notifier).state = chatId;
       }
 
       _subscribeToMessages(chatId);
-      _subscribeToPresence();
 
       if (mounted) {
-        ref.read(victimChatLoadingProvider.notifier).state = false;
+        ref.read(ngoChatLoadingProvider.notifier).state = false;
       }
     } catch (e) {
       if (mounted) {
-        ref.read(victimChatLoadingProvider.notifier).state = false;
+        ref.read(ngoChatLoadingProvider.notifier).state = false;
         pageMessage(
           'An unexpected error occurred. Please try again.',
           context,
@@ -136,12 +118,12 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
   }
 
   void _subscribeToMessages(String chatId) {
-    if (rescuerFirestore == null) return;
+    if (ngoFirestore == null) return;
 
     try {
       _messageSubscription?.cancel();
 
-      _messageSubscription = rescuerFirestore!
+      _messageSubscription = ngoFirestore!
           .collection('chats')
           .doc(chatId)
           .collection('messages')
@@ -161,8 +143,7 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
                   };
                 }).toList();
 
-            ref.read(victimChatMessagesProvider(chatId).notifier).state =
-                messages;
+            ref.read(ngoChatMessagesProvider(chatId).notifier).state = messages;
           });
     } catch (e) {
       if (mounted) {
@@ -175,43 +156,15 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
     }
   }
 
-  void _subscribeToPresence() {
-    if (rescuerFirestore == null) return;
-
-    try {
-      _presenceSubscription?.cancel();
-
-      _presenceSubscription = rescuerFirestore!
-          .collection('users')
-          .doc(widget.rescuerId)
-          .snapshots()
-          .listen((snapshot) {
-            if (!mounted) return;
-            final isOnline = snapshot.data()?['online'] ?? false;
-            ref
-                .read(rescuerOnlineStatusProvider(widget.rescuerId).notifier)
-                .state = isOnline;
-          });
-    } catch (e) {
-      if (mounted) {
-        pageMessage(
-          'Unable to check rescuer status, please retry',
-          context,
-          AppColors.error,
-        );
-      }
-    }
-  }
-
   Future<void> _sendMessage() async {
     try {
-      if (rescuerFirestore == null) return;
+      if (ngoFirestore == null) return;
 
       final text = _messageController.text.trim();
       if (text.isEmpty) return;
 
       final userId = FirebaseAuth.instance.currentUser?.uid;
-      final currentChatId = ref.read(victimChatIdProvider);
+      final currentChatId = ref.read(ngoChatIdProvider);
 
       if (userId == null || currentChatId == null) {
         if (mounted) {
@@ -226,14 +179,14 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
 
       _messageController.clear();
 
-      await rescuerFirestore!
+      await ngoFirestore!
           .collection('chats')
           .doc(currentChatId)
           .collection('messages')
           .add({
             'chatId': currentChatId,
             'senderId': userId,
-            'receiverId': widget.rescuerId,
+            'receiverId': widget.ngoId,
             'text': text,
             'status': 'sent',
             'createdAt': FieldValue.serverTimestamp(),
@@ -251,10 +204,10 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
 
   Future<void> _deleteMessage(String messageId) async {
     try {
-      final chatId = ref.read(victimChatIdProvider);
-      if (rescuerFirestore == null || chatId == null) return;
+      final chatId = ref.read(ngoChatIdProvider);
+      if (ngoFirestore == null || chatId == null) return;
 
-      await rescuerFirestore!
+      await ngoFirestore!
           .collection('chats')
           .doc(chatId)
           .collection('messages')
@@ -333,9 +286,6 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
   }
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
-    final avatarSize = ResponsiveHelper.isTablet(context) ? 56.0 : 40.0;
-    final isOnline = ref.watch(rescuerOnlineStatusProvider(widget.rescuerId));
-
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: ResponsiveHelper.isTablet(context) ? 24 : 16,
@@ -357,73 +307,17 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
             ),
             onPressed: () => pageNavigation(const VictimContactPage(), context),
           ),
-          SizedBox(
-            width: avatarSize,
-            height: avatarSize,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                CircleAvatar(
-                  radius: avatarSize / 2,
-                  backgroundColor: AppColors.primaryMaroon.withOpacity(0.1),
-                  backgroundImage:
-                      widget.rescuerPhotoUrl.isNotEmpty
-                          ? NetworkImage(widget.rescuerPhotoUrl)
-                          : null,
-                  child:
-                      widget.rescuerPhotoUrl.isEmpty
-                          ? Icon(
-                            Icons.person,
-                            color: AppColors.primaryMaroon,
-                            size: avatarSize * 0.5,
-                          )
-                          : null,
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: avatarSize * 0.28,
-                    height: avatarSize * 0.28,
-                    decoration: BoxDecoration(
-                      color: isOnline ? AppColors.success : AppColors.error,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.surfaceLight,
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _buildNgoLogo(widget.ngoName),
           SizedBox(width: ResponsiveHelper.isTablet(context) ? 16 : 12),
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.rescuerName,
-                  style: AppText.fieldLabel.copyWith(
-                    fontSize: ResponsiveHelper.isTablet(context) ? 18 : 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.darkCharcoal,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  isOnline ? 'Online' : 'Offline',
-                  style: AppText.small.copyWith(
-                    color:
-                        isOnline ? AppColors.success : AppColors.textSecondary,
-                    fontSize: ResponsiveHelper.bodyFont(context),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
+            child: Text(
+              widget.ngoName,
+              style: AppText.fieldLabel.copyWith(
+                fontSize: ResponsiveHelper.isTablet(context) ? 18 : 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.darkCharcoal,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -431,9 +325,38 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
     );
   }
 
+  Widget _buildNgoLogo(String ngoName) {
+    return Container(
+      width: ResponsiveHelper.isTablet(context) ? 72 : 48,
+      height: ResponsiveHelper.isTablet(context) ? 72 : 48,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderColor, width: 1),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          'assets/offline_logos/$ngoName.webp',
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: AppColors.primaryMaroon.withOpacity(0.1),
+              child: Icon(
+                Icons.business,
+                color: AppColors.primaryMaroon,
+                size: ResponsiveHelper.isTablet(context) ? 36 : 24,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildMessagesList(BuildContext context, WidgetRef ref) {
-    final isLoading = ref.watch(victimChatLoadingProvider);
-    final chatId = ref.watch(victimChatIdProvider);
+    final isLoading = ref.watch(ngoChatLoadingProvider);
+    final chatId = ref.watch(ngoChatIdProvider);
 
     if (isLoading) {
       return const Center(
@@ -441,7 +364,13 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
       );
     }
 
-    final messages = ref.watch(victimChatMessagesProvider(chatId!));
+    if (chatId == null) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryMaroon),
+      );
+    }
+
+    final messages = ref.watch(ngoChatMessagesProvider(chatId));
 
     if (messages.isEmpty) {
       return Center(

@@ -1,13 +1,15 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line_victim/models/flood_data.dart';
 import 'package:life_line_victim/models/earthquake_data.dart';
 import 'package:life_line_victim/pages/chat_bot.dart';
+import 'package:life_line_victim/pages/google_signup.dart';
 import 'package:life_line_victim/pages/ngo_connect.dart';
 import 'package:life_line_victim/providers/global_address_provider.dart';
 import 'package:life_line_victim/providers/landing_page_providers.dart';
 import 'package:life_line_victim/providers/lat_lng_provider.dart';
-import 'package:life_line_victim/services/auth_service.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/widgets/global/bottom_navbar.dart';
 import 'package:life_line_victim/services/google_flood_service.dart';
@@ -50,6 +52,29 @@ class _LandingPageState extends ConsumerState<LandingPage>
     super.dispose();
   }
 
+  Future<void> _handleLogout(BuildContext context) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Delete user document from Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .delete();
+      }
+
+      pageNavigation(const GoogleSignup(), context);
+    } catch (e) {
+      if (context.mounted) {
+        pageMessage(
+          'Failed to logout. Please try again.',
+          context,
+          AppColors.error,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,7 +96,9 @@ class _LandingPageState extends ConsumerState<LandingPage>
               color: AppColors.textSecondary,
               size: ResponsiveHelper.iconSize(context),
             ),
-            onPressed: () => GoogleSignInService.signOut(context),
+            onPressed: () async {
+              await _handleLogout(context);
+            },
           ),
         ],
       ),

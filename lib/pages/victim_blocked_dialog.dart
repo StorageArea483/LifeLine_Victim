@@ -1,11 +1,38 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:life_line_victim/pages/google_signup.dart';
 import 'package:life_line_victim/styles/styles.dart';
+import 'package:life_line_victim/widgets/global/page_message.dart';
+import 'package:life_line_victim/widgets/global/page_navigation.dart';
 
 class VictimBlockedDialog extends StatelessWidget {
   final String email;
 
   const VictimBlockedDialog({super.key, required this.email});
+
+  Future<void> _handleLogout(BuildContext context) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Delete user document from Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .delete();
+      }
+
+      pageNavigation(const GoogleSignup(), context);
+    } catch (e) {
+      if (context.mounted) {
+        pageMessage(
+          'Failed to logout. Please try again.',
+          context,
+          AppColors.error,
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +86,7 @@ class VictimBlockedDialog extends StatelessWidget {
                   child: ElevatedButton(
                     style: AppButtons.submit,
                     onPressed: () async {
-                      await FirebaseAuth.instance.signOut();
+                      await _handleLogout(context);
                     },
                     child: const Text('Sign Out', style: AppText.submitButton),
                   ),

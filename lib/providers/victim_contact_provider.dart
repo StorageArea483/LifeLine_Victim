@@ -6,3 +6,5 @@ final victimContactLoadingProvider = StateProvider.autoDispose<bool>(
 
 final assignedRescuerProvider =
     StateProvider.autoDispose<Map<String, dynamic>?>((ref) => null);
+
+final assignedNgoProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
