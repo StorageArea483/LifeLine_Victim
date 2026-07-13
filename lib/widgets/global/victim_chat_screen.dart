@@ -161,6 +161,7 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
                   };
                 }).toList();
 
+            if (!mounted) return;
             ref.read(victimChatMessagesProvider(chatId).notifier).state =
                 messages;
           });
@@ -211,6 +212,7 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
       if (text.isEmpty) return;
 
       final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (!mounted) return;
       final currentChatId = ref.read(victimChatIdProvider);
 
       if (userId == null || currentChatId == null) {
@@ -251,6 +253,7 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
 
   Future<void> _deleteMessage(String messageId) async {
     try {
+      if (!mounted) return;
       final chatId = ref.read(victimChatIdProvider);
       if (rescuerFirestore == null || chatId == null) return;
 
@@ -441,7 +444,13 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
       );
     }
 
-    final messages = ref.watch(victimChatMessagesProvider(chatId!));
+    if (chatId == null) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryMaroon),
+      );
+    }
+
+    final messages = ref.watch(victimChatMessagesProvider(chatId));
 
     if (messages.isEmpty) {
       return Center(

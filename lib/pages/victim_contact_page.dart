@@ -294,7 +294,7 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
           ),
         ],
       ),
-      child: GestureDetector(
+      child: ListTile(
         onTap: () {
           pageNavigation(
             VictimChatScreen(
@@ -305,77 +305,72 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
             context,
           );
         },
-        child: ListTile(
-          contentPadding: EdgeInsets.all(
-            ResponsiveHelper.isTablet(context) ? 24 : 16,
-          ),
-          leading: SizedBox(
-            width: avatarSize,
-            height: avatarSize,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                CircleAvatar(
-                  radius: avatarSize / 2,
-                  backgroundColor: AppColors.primaryMaroon.withOpacity(0.1),
-                  backgroundImage:
-                      photoURL.isNotEmpty ? NetworkImage(photoURL) : null,
-                  child:
-                      photoURL.isEmpty
-                          ? Icon(
-                            Icons.person,
-                            color: AppColors.primaryMaroon,
-                            size: avatarSize * 0.5,
-                          )
-                          : null,
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: avatarSize * 0.28,
-                    height: avatarSize * 0.28,
-                    decoration: BoxDecoration(
-                      color: isOnline ? AppColors.success : AppColors.error,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.surfaceLight,
-                        width: 2,
-                      ),
-                    ),
+        contentPadding: EdgeInsets.all(
+          ResponsiveHelper.isTablet(context) ? 24 : 16,
+        ),
+        leading: SizedBox(
+          width: avatarSize,
+          height: avatarSize,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              CircleAvatar(
+                radius: avatarSize / 2,
+                backgroundColor: AppColors.primaryMaroon.withOpacity(0.1),
+                backgroundImage:
+                    photoURL.isNotEmpty ? NetworkImage(photoURL) : null,
+                child:
+                    photoURL.isEmpty
+                        ? Icon(
+                          Icons.person,
+                          color: AppColors.primaryMaroon,
+                          size: avatarSize * 0.5,
+                        )
+                        : null,
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: avatarSize * 0.28,
+                  height: avatarSize * 0.28,
+                  decoration: BoxDecoration(
+                    color: isOnline ? AppColors.success : AppColors.error,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.surfaceLight, width: 2),
                   ),
                 ),
-              ],
-            ),
-          ),
-          title: Text(
-            fullName,
-            style: AppText.fieldLabel.copyWith(
-              fontSize: ResponsiveHelper.isTablet(context) ? 20 : 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.darkCharcoal,
-            ),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              isOnline ? 'Online' : 'Offline',
-              style: AppText.small.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: ResponsiveHelper.bodyFont(context),
               ),
+            ],
+          ),
+        ),
+        title: Text(
+          fullName,
+          style: AppText.fieldLabel.copyWith(
+            fontSize: ResponsiveHelper.isTablet(context) ? 20 : 16,
+            fontWeight: FontWeight.w700,
+            color: AppColors.darkCharcoal,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            isOnline ? 'Online' : 'Offline',
+            style: AppText.small.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: ResponsiveHelper.bodyFont(context),
             ),
           ),
-          trailing: IconButton(
-            icon: Icon(
-              Icons.call,
-              color: AppColors.primaryMaroon,
-              size: ResponsiveHelper.iconSize(context),
-            ),
-            onPressed: () {
-              // Calling logic to be implemented later
-            },
+        ),
+        trailing: IconButton(
+          icon: Icon(
+            Icons.call,
+            color: AppColors.primaryMaroon,
+            size: ResponsiveHelper.iconSize(context),
           ),
+          onPressed: () {
+            // Calling logic to be implemented later
+          },
         ),
       ),
     );

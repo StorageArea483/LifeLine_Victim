@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 final ngoChatIdProvider = StateProvider<String?>((ref) => null);
 
 // Loading state while chat initializes
-final ngoChatLoadingProvider = StateProvider<bool>((ref) => false);
+final ngoChatLoadingProvider = StateProvider.autoDispose<bool>((ref) => false);
 
 // Messages for a given chatId
 final ngoChatMessagesProvider =

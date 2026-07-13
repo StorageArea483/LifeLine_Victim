@@ -180,9 +180,12 @@ class _NgoConnectState extends ConsumerState<NgoConnect> {
     try {
       // Read provider values before the async operation
       if (!mounted) return;
-
       final latitude = ref.read(latLngProvider).latitude;
+
+      if (!mounted) return;
       final longitude = ref.read(latLngProvider).longitude;
+
+      if (!mounted) return;
       final address = ref.read(globalAddressProvider);
 
       // Validate that location data is available
