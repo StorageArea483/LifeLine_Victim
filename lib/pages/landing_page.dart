@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line_victim/models/flood_data.dart';
@@ -7,6 +8,7 @@ import 'package:life_line_victim/models/earthquake_data.dart';
 import 'package:life_line_victim/pages/chat_bot.dart';
 import 'package:life_line_victim/pages/google_signup.dart';
 import 'package:life_line_victim/pages/ngo_connect.dart';
+import 'package:life_line_victim/pages/victim_map_page.dart';
 import 'package:life_line_victim/providers/global_address_provider.dart';
 import 'package:life_line_victim/providers/landing_page_providers.dart';
 import 'package:life_line_victim/providers/lat_lng_provider.dart';
@@ -32,8 +34,18 @@ class _LandingPageState extends ConsumerState<LandingPage>
     with SingleTickerProviderStateMixin {
   final FloodService _floodService = FloodService();
   final EarthquakeService _earthquakeService = EarthquakeService();
+  FirebaseFirestore? ngoFirestore;
   AnimationController? _pulseController;
   Animation<double>? _pulseAnimation;
+
+  static const FirebaseOptions _ngoFirebaseOptions = FirebaseOptions(
+    apiKey: 'AIzaSyBeieryGaw4bh4dtbrI54qsIc51XkP6SoM',
+    appId: '1:169949190544:web:2640453ce5dd2aa55d3b15',
+    messagingSenderId: '169949190544',
+    projectId: 'life-line-ngo',
+    authDomain: 'life-line-ngo.firebaseapp.com',
+    storageBucket: 'life-line-ngo.firebasestorage.app',
+  );
 
   @override
   void initState() {
@@ -45,12 +57,37 @@ class _LandingPageState extends ConsumerState<LandingPage>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _pulseController!, curve: Curves.easeInOut),
     );
+    _initSecondaryFirebase();
+    _checkAssignmentStatus();
   }
 
   @override
   void dispose() {
     _pulseController?.dispose();
     super.dispose();
+  }
+
+  Future<void> _initSecondaryFirebase() async {
+    try {
+      FirebaseApp ngoApp;
+      // NGO Firebase
+      try {
+        ngoApp = Firebase.app('life-line-ngo');
+      } catch (_) {
+        ngoApp = await Firebase.initializeApp(
+          name: 'life-line-ngo',
+          options: _ngoFirebaseOptions,
+        );
+      }
+      ngoFirestore = FirebaseFirestore.instanceFor(app: ngoApp);
+    } catch (e) {
+      pageMessage(
+        'An unexpected error occurred. Please try again.',
+        context,
+        AppColors.error,
+      );
+      pageNavigation(const InOutCalls(child: LandingPage()), context);
+    }
   }
 
   Future<void> _handleLogout(BuildContext context) async {
@@ -72,6 +109,39 @@ class _LandingPageState extends ConsumerState<LandingPage>
           context,
           AppColors.error,
         );
+      }
+    }
+  }
+
+  Future<void> _checkAssignmentStatus() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || ngoFirestore == null) return;
+
+      final requestDoc =
+          await ngoFirestore!.collection('requests').doc(user.uid).get();
+
+      if (!requestDoc.exists) return;
+
+      final data = requestDoc.data();
+      final assigned = data?['assigned'] as bool? ?? false;
+
+      if (assigned) {
+        final lat = (data?['latitude'] as num?)?.toDouble();
+        final lng = (data?['longitude'] as num?)?.toDouble();
+
+        if (mounted) {
+          ref.read(landingPageProvider.notifier).setRescuerAssigned(true);
+          ref.read(landingPageProvider.notifier).setRescuerLocation(lat, lng);
+        }
+      } else {
+        if (mounted) {
+          ref.read(landingPageProvider.notifier).setRescuerAssigned(false);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ref.read(landingPageProvider.notifier).setRescuerAssigned(false);
       }
     }
   }
@@ -484,6 +554,87 @@ class _LandingPageState extends ConsumerState<LandingPage>
                           ),
                         ],
                       ),
+                    ),
+
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final rescuerAssigned = ref.watch(
+                          landingPageProvider.select((v) => v.rescuerAssigned),
+                        );
+                        final rescuerLatitude = ref.watch(
+                          landingPageProvider.select((v) => v.rescuerLatitude),
+                        );
+                        final rescuerLongitude = ref.watch(
+                          landingPageProvider.select((v) => v.rescuerLongitude),
+                        );
+
+                        if (!rescuerAssigned) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              height:
+                                  ResponsiveHelper.isTablet(context) ? 24 : 16,
+                            ),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceLight,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: AppColors.borderColor,
+                                  width: 1,
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: AppColors.shadowLight,
+                                    blurRadius: 8,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal:
+                                      ResponsiveHelper.isTablet(context)
+                                          ? 24
+                                          : 16,
+                                  vertical: 8,
+                                ),
+                                title: Text(
+                                  'Show Rescuer Live Location',
+                                  style: AppText.fieldLabel.copyWith(
+                                    fontSize:
+                                        ResponsiveHelper.isTablet(context)
+                                            ? 18
+                                            : 15,
+                                  ),
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(
+                                    Icons.location_on,
+                                    color: AppColors.primaryMaroon,
+                                    size: 25,
+                                  ),
+                                  onPressed: () {
+                                    pageNavigation(
+                                      InOutCalls(
+                                        child: VictimMapPage(
+                                          rescuerLatitude: rescuerLatitude,
+                                          rescuerLongitude: rescuerLongitude,
+                                        ),
+                                      ),
+                                      context,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),

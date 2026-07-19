@@ -158,7 +158,15 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage>
               .get();
       if (!victimDoc.exists) return;
 
-      final rescuerId = victimDoc.data()?['assignedWith'];
+      final dataMap = victimDoc.data();
+      if (dataMap == null) return;
+
+      // 1. Check if requestAccepted is equal to "accepted"
+      final requestAcceptedStatus = dataMap['requestAccepted'];
+      if (requestAcceptedStatus != 'accepted') return;
+
+      // 2. Extract and check the assignedWith key
+      final rescuerId = dataMap['assignedWith'];
       if (rescuerId == null || rescuerId.toString().isEmpty) return;
 
       final rescuerDoc =

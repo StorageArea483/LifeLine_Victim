@@ -203,6 +203,7 @@ class _NgoConnectState extends ConsumerState<NgoConnect> {
         'latitude': latitude,
         'longitude': longitude,
         'address': address ?? 'N/A',
+        'assigned': false,
       });
 
       await FirebaseFirestore.instance.collection('users').doc(userId).set({

@@ -21,13 +21,15 @@ final appRouterProvider = Provider<AppRoute>((ref) {
   final internet = ref.watch(internetProvider);
   final userStatus = ref.watch(userStatusStreamProvider);
   final settings = ref.watch(adminSettingsStreamProvider);
-  final requestExists = ref.watch(requestExistsStreamProvider);
+  final requestStatus = ref.watch(
+    requestStatusStreamProvider,
+  ); // Watched the updated provider
 
   // Loading Screen Fallback
   if (internet.isLoading ||
       userStatus.isLoading ||
       settings.isLoading ||
-      requestExists.isLoading) {
+      requestStatus.isLoading) {
     return AppRoute.loading;
   }
 
@@ -48,8 +50,12 @@ final appRouterProvider = Provider<AppRoute>((ref) {
   if (admin.maintenance) return AppRoute.maintenance;
   if (admin.sosDisabled) return AppRoute.sosDisabled;
 
-  if (requestExists.value == true) {
+  // Check the requestAccepted value
+  final requestStatusValue = requestStatus.value;
+  if (requestStatusValue == 'pending') {
     return AppRoute.victimWaiting;
+  } else if (requestStatusValue == 'accepted') {
+    return AppRoute.home;
   }
 
   return AppRoute.home;

@@ -4,13 +4,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line_victim/pages/landing_page.dart';
-import 'package:life_line_victim/pages/victim_map_page.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/utils/responsive_helper.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
 import 'dart:async';
-import 'dart:developer' as developer;
 
 class VictimWaitingScreen extends ConsumerStatefulWidget {
   final String requestType;
@@ -22,8 +20,6 @@ class VictimWaitingScreen extends ConsumerStatefulWidget {
 
 class _VictimWaitingState extends ConsumerState<VictimWaitingScreen> {
   FirebaseFirestore? _ngoFirestore;
-  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
-  _requestStatusSubscription;
 
   // Firebase configuration for life-line-ngo
   static const FirebaseOptions _ngoFirebaseOptions = FirebaseOptions(
@@ -39,7 +35,6 @@ class _VictimWaitingState extends ConsumerState<VictimWaitingScreen> {
   void initState() {
     super.initState();
     _initSecondaryFirebase();
-    _listenForRescuerAcceptance();
   }
 
   Future<void> _initSecondaryFirebase() async {
@@ -63,12 +58,6 @@ class _VictimWaitingState extends ConsumerState<VictimWaitingScreen> {
         );
       }
     }
-  }
-
-  @override
-  void dispose() {
-    _requestStatusSubscription?.cancel();
-    super.dispose();
   }
 
   String? _getCurrentUserId() {
@@ -100,55 +89,6 @@ class _VictimWaitingState extends ConsumerState<VictimWaitingScreen> {
     } catch (e) {
       rethrow;
     }
-  }
-
-  void _listenForRescuerAcceptance() {
-    final userId = _getCurrentUserId();
-    if (userId == null) return;
-
-    _requestStatusSubscription?.cancel();
-
-    _requestStatusSubscription = FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .snapshots()
-        .listen((snapshot) {
-          if (!snapshot.exists) return;
-
-          final data = snapshot.data();
-          if (data == null) return;
-
-          final requestAccepted = data['requestAccepted'];
-          if (requestAccepted != 'accepted') return;
-
-          // Stop the listener immediately to guarantee only one navigation.
-          _requestStatusSubscription?.cancel();
-          _requestStatusSubscription = null;
-
-          final rawLatitude = data['rescuerLatitude'];
-          final rawLongitude = data['rescuerLongitude'];
-
-          final double? rescuerLatitude =
-              (rawLatitude is num) ? rawLatitude.toDouble() : null;
-          final double? rescuerLongitude =
-              (rawLongitude is num) ? rawLongitude.toDouble() : null;
-
-          final hasValidCoordinates =
-              rescuerLatitude != null &&
-              rescuerLongitude != null &&
-              rescuerLatitude != 0.0 &&
-              rescuerLongitude != 0.0;
-
-          if (hasValidCoordinates) {
-            pageNavigation(
-              VictimMapPage(
-                rescuerLatitude: rescuerLatitude,
-                rescuerLongitude: rescuerLongitude,
-              ),
-              context,
-            );
-          }
-        });
   }
 
   @override
@@ -227,7 +167,6 @@ class _VictimWaitingState extends ConsumerState<VictimWaitingScreen> {
                         context,
                         AppColors.error,
                       );
-                      developer.log('EXCEPTION CAUGHT: $e');
                     }
                   }
                 },
