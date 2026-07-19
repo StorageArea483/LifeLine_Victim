@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:life_line_victim/pages/landing_page.dart';
 import 'package:life_line_victim/pages/ngo_connect.dart';
 import 'package:life_line_victim/widgets/global/bottom_navbar.dart';
+import 'package:life_line_victim/widgets/global/in_out_calls.dart';
 import 'package:life_line_victim/widgets/global/page_loading.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
@@ -391,7 +392,7 @@ class _ChatBotState extends ConsumerState<ChatBot> {
             color: AppColors.textPrimary,
           ),
           onPressed: () {
-            pageNavigation(const LandingPage(), context);
+            pageNavigation(const InOutCalls(child: LandingPage()), context);
           },
         ),
         actions: [

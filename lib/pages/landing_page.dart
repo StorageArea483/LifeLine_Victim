@@ -17,6 +17,7 @@ import 'package:life_line_victim/services/earthquake_service.dart';
 import 'package:life_line_victim/widgets/fetch_lat_long.dart';
 import 'package:life_line_victim/services/location_service.dart';
 import 'package:life_line_victim/utils/responsive_helper.dart';
+import 'package:life_line_victim/widgets/global/in_out_calls.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
 
@@ -448,7 +449,9 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                 TextButton(
                                   onPressed: () {
                                     pageNavigation(
-                                      const ChatBot(request: 'medical'),
+                                      const InOutCalls(
+                                        child: ChatBot(request: 'medical'),
+                                      ),
                                       context,
                                     );
                                   },
@@ -930,7 +933,12 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                 if (!mounted) return;
                                 Navigator.of(context).pop();
                                 pageNavigation(
-                                  ChatBot(request: label, severity: severity),
+                                  InOutCalls(
+                                    child: ChatBot(
+                                      request: label,
+                                      severity: severity,
+                                    ),
+                                  ),
                                   context,
                                 );
                               },

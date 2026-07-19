@@ -23,7 +23,7 @@ final appRouterProvider = Provider<AppRoute>((ref) {
   final settings = ref.watch(adminSettingsStreamProvider);
   final requestExists = ref.watch(requestExistsStreamProvider);
 
-  // Loading
+  // Loading Screen Fallback
   if (internet.isLoading ||
       userStatus.isLoading ||
       settings.isLoading ||
@@ -31,38 +31,22 @@ final appRouterProvider = Provider<AppRoute>((ref) {
     return AppRoute.loading;
   }
 
-  // Offline
+  // Network Check
   final connectivity = internet.value;
-
   if (connectivity == null || connectivity.contains(ConnectivityResult.none)) {
     return AppRoute.offline;
   }
 
-  // User Status
+  // Identity Profiles Checks
   final status = userStatus.value;
+  if (status == null) return AppRoute.login;
+  if (status.isBlocked) return AppRoute.blocked;
 
-  if (status == null) {
-    return AppRoute.login;
-  }
-
-  if (status.isBlocked) {
-    return AppRoute.blocked;
-  }
-
-  // Admin Settings
+  // Remote Config Flags
   final admin = settings.value;
-
-  if (admin == null) {
-    return AppRoute.loading;
-  }
-
-  if (admin.maintenance) {
-    return AppRoute.maintenance;
-  }
-
-  if (admin.sosDisabled) {
-    return AppRoute.sosDisabled;
-  }
+  if (admin == null) return AppRoute.loading;
+  if (admin.maintenance) return AppRoute.maintenance;
+  if (admin.sosDisabled) return AppRoute.sosDisabled;
 
   if (requestExists.value == true) {
     return AppRoute.victimWaiting;

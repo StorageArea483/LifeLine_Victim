@@ -4,6 +4,7 @@ import 'package:life_line_victim/pages/landing_page.dart';
 import 'package:life_line_victim/providers/global_state_providers.dart';
 import 'package:life_line_victim/services/auth_service.dart';
 import 'package:life_line_victim/styles/styles.dart';
+import 'package:life_line_victim/widgets/global/in_out_calls.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
 
@@ -57,7 +58,7 @@ class GoogleAuthentication extends StatelessWidget {
 
       if (userCredential != null) {
         if (context.mounted) {
-          pageNavigation(const LandingPage(), context);
+          pageNavigation(const InOutCalls(child: LandingPage()), context);
         }
       }
       if (context.mounted) {

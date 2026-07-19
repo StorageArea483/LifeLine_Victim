@@ -5,11 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line_victim/pages/landing_page.dart';
 import 'package:life_line_victim/providers/victim_contact_provider.dart';
+import 'package:life_line_victim/services/call_service.dart';
 import 'package:life_line_victim/styles/styles.dart';
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:life_line_victim/utils/responsive_helper.dart';
 import 'package:life_line_victim/widgets/global/bottom_navbar.dart';
+import 'package:life_line_victim/widgets/global/in_out_calls.dart';
 import 'package:life_line_victim/widgets/global/ngo_chat_screen.dart';
 import 'package:life_line_victim/widgets/global/page_loading.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
@@ -23,7 +26,8 @@ class VictimContactPage extends ConsumerStatefulWidget {
   ConsumerState<VictimContactPage> createState() => _VictimContactPageState();
 }
 
-class _VictimContactPageState extends ConsumerState<VictimContactPage> {
+class _VictimContactPageState extends ConsumerState<VictimContactPage>
+    with WidgetsBindingObserver {
   FirebaseFirestore? rescuerFirestore;
   FirebaseFirestore? ngoFirestore;
 
@@ -57,9 +61,39 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _updateOnlineStatus(true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initSecondaryFirebase();
     });
+  }
+
+  @override
+  void dispose() {
+    _updateOnlineStatus(false);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _updateOnlineStatus(true);
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _updateOnlineStatus(false);
+    }
+  }
+
+  Future<void> _updateOnlineStatus(bool online) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
+        {'online': online},
+      );
+    } catch (_) {}
   }
 
   Future<void> _initSecondaryFirebase() async {
@@ -79,7 +113,6 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
           options: Platform.isIOS ? _rescuerIosOptions : _rescuerAndroidOptions,
         );
       }
-
       rescuerFirestore = FirebaseFirestore.instanceFor(app: rescuerApp);
 
       // NGO Firebase
@@ -91,7 +124,6 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
           options: _ngoFirebaseOptions,
         );
       }
-
       ngoFirestore = FirebaseFirestore.instanceFor(app: ngoApp);
 
       await _fetchAssignedRescuer();
@@ -108,34 +140,29 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
           context,
           AppColors.error,
         );
-        pageNavigation(const LandingPage(), context);
+        pageNavigation(const InOutCalls(child: LandingPage()), context);
       }
     }
   }
 
   Future<void> _fetchAssignedRescuer() async {
     if (rescuerFirestore == null) return;
-
     try {
       final victimId = FirebaseAuth.instance.currentUser?.uid;
       if (victimId == null) return;
 
-      // Fetch the victim's own doc (default/primary Firestore) to get assignedWith
       final victimDoc =
           await FirebaseFirestore.instance
               .collection('users')
               .doc(victimId)
               .get();
-
       if (!victimDoc.exists) return;
 
       final rescuerId = victimDoc.data()?['assignedWith'];
       if (rescuerId == null || rescuerId.toString().isEmpty) return;
 
-      // Check if a matching rescuer document exists
       final rescuerDoc =
           await rescuerFirestore!.collection('users').doc(rescuerId).get();
-
       if (!rescuerDoc.exists) return;
 
       final data = rescuerDoc.data()!;
@@ -158,14 +185,12 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
 
   Future<void> _fetchAssignedNgo() async {
     if (ngoFirestore == null) return;
-
     try {
       final victimId = FirebaseAuth.instance.currentUser?.uid;
       if (victimId == null) return;
 
       final requestDoc =
           await ngoFirestore!.collection('requests').doc(victimId).get();
-
       if (!requestDoc.exists) return;
 
       final ngoId = requestDoc.data()?['ngoId'];
@@ -173,7 +198,6 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
 
       final ngoDoc =
           await ngoFirestore!.collection('ngo-info-database').doc(ngoId).get();
-
       if (!ngoDoc.exists) return;
 
       final data = ngoDoc.data()!;
@@ -192,6 +216,7 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Clean, direct layout tree setup matching the Rescuer configuration
     return Scaffold(
       backgroundColor: AppColors.softBackground,
       appBar: AppBar(
@@ -297,10 +322,12 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
       child: ListTile(
         onTap: () {
           pageNavigation(
-            VictimChatScreen(
-              rescuerId: rescuer['id'],
-              rescuerName: fullName,
-              rescuerPhotoUrl: photoURL,
+            InOutCalls(
+              child: VictimChatScreen(
+                rescuerId: rescuer['id'],
+                rescuerName: fullName,
+                rescuerPhotoUrl: photoURL,
+              ),
             ),
             context,
           );
@@ -368,8 +395,18 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
             color: AppColors.primaryMaroon,
             size: ResponsiveHelper.iconSize(context),
           ),
-          onPressed: () {
-            // Calling logic to be implemented later
+          onPressed: () async {
+            final victimId = FirebaseAuth.instance.currentUser?.uid;
+            if (victimId == null || rescuerFirestore == null) return;
+            await CallService.initiateCall(
+              callerId: victimId,
+              receiverId: rescuer['id'] ?? '',
+              callerName:
+                  FirebaseAuth.instance.currentUser?.displayName ?? 'Victim',
+              callerPhotoUrl: FirebaseAuth.instance.currentUser?.photoURL ?? '',
+              rescuerFirestore: rescuerFirestore!,
+              audioOnly: false,
+            );
           },
         ),
       ),
@@ -402,7 +439,9 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage> {
       child: GestureDetector(
         onTap: () {
           pageNavigation(
-            NgoChatScreen(ngoId: ngo['ngoId'] ?? '', ngoName: ngoName),
+            InOutCalls(
+              child: NgoChatScreen(ngoId: ngo['ngoId'] ?? '', ngoName: ngoName),
+            ),
             context,
           );
         },

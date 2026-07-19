@@ -25,6 +25,10 @@
     <key>NSSpeechRecognitionUsageDescription</key>
     <string>This app uses speech recognition to transcribe your voice input.</string>
 
+     <!--Camera-->
+    <key>NSCameraUsageDescription</key>
+    <string>The app needs access to your camera for calls.</string>
+
     <!-- Microphone Permission -->
     <key>NSMicrophoneUsageDescription</key>
     <string>This app needs access to your microphone to record your voice input.</string>

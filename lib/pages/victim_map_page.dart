@@ -19,6 +19,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:life_line_victim/utils/responsive_helper.dart';
+import 'package:life_line_victim/widgets/global/in_out_calls.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
 
@@ -155,7 +156,7 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
         context,
         AppColors.error,
       );
-      pageNavigation(const LandingPage(), context);
+      pageNavigation(const InOutCalls(child: LandingPage()), context);
     }
   }
 
@@ -306,7 +307,7 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
         context,
         AppColors.error,
       );
-      pageNavigation(const LandingPage(), context);
+      pageNavigation(const InOutCalls(child: LandingPage()), context);
     }
   }
 

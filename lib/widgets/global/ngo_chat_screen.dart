@@ -9,6 +9,7 @@ import 'package:life_line_victim/pages/victim_contact_page.dart';
 import 'package:life_line_victim/providers/ngo_chat_provider.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/utils/responsive_helper.dart';
+import 'package:life_line_victim/widgets/global/in_out_calls.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
 
@@ -87,7 +88,7 @@ class _NgoChatScreenState extends ConsumerState<NgoChatScreen> {
             context,
             AppColors.error,
           );
-          pageNavigation(const LandingPage(), context);
+          pageNavigation(const InOutCalls(child: LandingPage()), context);
         }
         return;
       }
@@ -112,7 +113,7 @@ class _NgoChatScreenState extends ConsumerState<NgoChatScreen> {
           context,
           AppColors.error,
         );
-        pageNavigation(const LandingPage(), context);
+        pageNavigation(const InOutCalls(child: LandingPage()), context);
       }
     }
   }
@@ -152,6 +153,7 @@ class _NgoChatScreenState extends ConsumerState<NgoChatScreen> {
           context,
           AppColors.error,
         );
+        pageNavigation(const InOutCalls(child: LandingPage()), context);
       }
     }
   }
@@ -305,7 +307,11 @@ class _NgoChatScreenState extends ConsumerState<NgoChatScreen> {
               size: ResponsiveHelper.iconSize(context),
               color: AppColors.textPrimary,
             ),
-            onPressed: () => pageNavigation(const VictimContactPage(), context),
+            onPressed:
+                () => pageNavigation(
+                  const InOutCalls(child: VictimContactPage()),
+                  context,
+                ),
           ),
           _buildNgoLogo(widget.ngoName),
           SizedBox(width: ResponsiveHelper.isTablet(context) ? 16 : 12),

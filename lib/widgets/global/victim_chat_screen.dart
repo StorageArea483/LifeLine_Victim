@@ -9,6 +9,7 @@ import 'package:life_line_victim/pages/victim_contact_page.dart';
 import 'package:life_line_victim/providers/victim_chat_provider.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/utils/responsive_helper.dart';
+import 'package:life_line_victim/widgets/global/in_out_calls.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
 import 'dart:io' show Platform;
@@ -104,7 +105,7 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
             context,
             AppColors.error,
           );
-          pageNavigation(const LandingPage(), context);
+          pageNavigation(const InOutCalls(child: LandingPage()), context);
         }
         return;
       }
@@ -130,7 +131,7 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
           context,
           AppColors.error,
         );
-        pageNavigation(const LandingPage(), context);
+        pageNavigation(const InOutCalls(child: LandingPage()), context);
       }
     }
   }
@@ -358,7 +359,11 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
               size: ResponsiveHelper.iconSize(context),
               color: AppColors.textPrimary,
             ),
-            onPressed: () => pageNavigation(const VictimContactPage(), context),
+            onPressed:
+                () => pageNavigation(
+                  const InOutCalls(child: VictimContactPage()),
+                  context,
+                ),
           ),
           SizedBox(
             width: avatarSize,
