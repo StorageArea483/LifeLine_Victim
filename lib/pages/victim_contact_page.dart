@@ -13,11 +13,13 @@ import 'dart:io' show Platform;
 import 'package:life_line_victim/utils/responsive_helper.dart';
 import 'package:life_line_victim/widgets/global/bottom_navbar.dart';
 import 'package:life_line_victim/widgets/global/in_out_calls.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/ngo_chat_screen.dart';
 import 'package:life_line_victim/widgets/global/page_loading.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
 import 'package:life_line_victim/widgets/global/victim_chat_screen.dart';
+import 'package:life_line_victim/widgets/global/victim_online_status.dart';
 
 class VictimContactPage extends ConsumerStatefulWidget {
   const VictimContactPage({super.key});
@@ -26,8 +28,7 @@ class VictimContactPage extends ConsumerStatefulWidget {
   ConsumerState<VictimContactPage> createState() => _VictimContactPageState();
 }
 
-class _VictimContactPageState extends ConsumerState<VictimContactPage>
-    with WidgetsBindingObserver {
+class _VictimContactPageState extends ConsumerState<VictimContactPage> {
   FirebaseFirestore? rescuerFirestore;
   FirebaseFirestore? ngoFirestore;
 
@@ -61,39 +62,9 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _updateOnlineStatus(true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initSecondaryFirebase();
     });
-  }
-
-  @override
-  void dispose() {
-    _updateOnlineStatus(false);
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _updateOnlineStatus(true);
-    } else if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
-      _updateOnlineStatus(false);
-    }
-  }
-
-  Future<void> _updateOnlineStatus(bool online) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update(
-        {'online': online},
-      );
-    } catch (_) {}
   }
 
   Future<void> _initSecondaryFirebase() async {
@@ -140,7 +111,12 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage>
           context,
           AppColors.error,
         );
-        pageNavigation(const InOutCalls(child: LandingPage()), context);
+        pageNavigation(
+          const InternetConnection(
+            child: VictimOnlineStatus(child: InOutCalls(child: LandingPage())),
+          ),
+          context,
+        );
       }
     }
   }
@@ -330,11 +306,15 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage>
       child: ListTile(
         onTap: () {
           pageNavigation(
-            InOutCalls(
-              child: VictimChatScreen(
-                rescuerId: rescuer['id'],
-                rescuerName: fullName,
-                rescuerPhotoUrl: photoURL,
+            InternetConnection(
+              child: VictimOnlineStatus(
+                child: InOutCalls(
+                  child: VictimChatScreen(
+                    rescuerId: rescuer['id'],
+                    rescuerName: fullName,
+                    rescuerPhotoUrl: photoURL,
+                  ),
+                ),
               ),
             ),
             context,
@@ -447,8 +427,16 @@ class _VictimContactPageState extends ConsumerState<VictimContactPage>
       child: GestureDetector(
         onTap: () {
           pageNavigation(
-            InOutCalls(
-              child: NgoChatScreen(ngoId: ngo['ngoId'] ?? '', ngoName: ngoName),
+            InternetConnection(
+              child: VictimOnlineStatus(
+                child: InOutCalls(
+                  child: NgoChatScreen(
+                    ngoId: ngo['id'] ?? '',
+                    ngoName: ngoName,
+                    isSosAlternative: false,
+                  ),
+                ),
+              ),
             ),
             context,
           );

@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/providers/sos_alt_provider.dart';
 import 'package:life_line_victim/utils/responsive_helper.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
+import 'package:life_line_victim/widgets/global/ngo_chat_screen.dart';
 import 'package:life_line_victim/widgets/global/page_loading.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
+import 'package:life_line_victim/widgets/global/page_navigation.dart';
 
 class SosAlternative extends ConsumerStatefulWidget {
   const SosAlternative({super.key});
@@ -284,10 +287,15 @@ class _SosAlternativeState extends ConsumerState<SosAlternative> {
                           ),
                           onPressed: () {
                             if (mounted) {
-                              pageMessage(
-                                'Chat feature coming soon',
+                              pageNavigation(
+                                InternetConnection(
+                                  child: NgoChatScreen(
+                                    ngoId: ngoId,
+                                    ngoName: ngoName,
+                                    isSosAlternative: true,
+                                  ),
+                                ),
                                 context,
-                                AppColors.info,
                               );
                             }
                           },

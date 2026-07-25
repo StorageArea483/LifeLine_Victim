@@ -1,3 +1,5 @@
+import 'dart:core';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -20,8 +22,10 @@ import 'package:life_line_victim/widgets/fetch_lat_long.dart';
 import 'package:life_line_victim/services/location_service.dart';
 import 'package:life_line_victim/utils/responsive_helper.dart';
 import 'package:life_line_victim/widgets/global/in_out_calls.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
+import 'package:life_line_victim/widgets/global/victim_online_status.dart';
 
 class LandingPage extends ConsumerStatefulWidget {
   const LandingPage({super.key});
@@ -57,14 +61,18 @@ class _LandingPageState extends ConsumerState<LandingPage>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
       CurvedAnimation(parent: _pulseController!, curve: Curves.easeInOut),
     );
-    _initSecondaryFirebase();
-    _checkAssignmentStatus();
+    _initializeLandingPage();
   }
 
   @override
   void dispose() {
     _pulseController?.dispose();
     super.dispose();
+  }
+
+  Future<void> _initializeLandingPage() async {
+    await _initSecondaryFirebase();
+    await _checkAssignmentStatus();
   }
 
   Future<void> _initSecondaryFirebase() async {
@@ -86,7 +94,12 @@ class _LandingPageState extends ConsumerState<LandingPage>
         context,
         AppColors.error,
       );
-      pageNavigation(const InOutCalls(child: LandingPage()), context);
+      pageNavigation(
+        const InternetConnection(
+          child: VictimOnlineStatus(child: InOutCalls(child: LandingPage())),
+        ),
+        context,
+      );
     }
   }
 
@@ -101,7 +114,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
             .delete();
       }
 
-      pageNavigation(const GoogleSignup(), context);
+      pageNavigation(const InternetConnection(child: GoogleSignup()), context);
     } catch (e) {
       if (context.mounted) {
         pageMessage(
@@ -519,8 +532,12 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                 TextButton(
                                   onPressed: () {
                                     pageNavigation(
-                                      const InOutCalls(
-                                        child: ChatBot(request: 'medical'),
+                                      const InternetConnection(
+                                        child: VictimOnlineStatus(
+                                          child: InOutCalls(
+                                            child: ChatBot(request: 'medical'),
+                                          ),
+                                        ),
                                       ),
                                       context,
                                     );
@@ -620,10 +637,15 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                   ),
                                   onPressed: () {
                                     pageNavigation(
-                                      InOutCalls(
-                                        child: VictimMapPage(
-                                          rescuerLatitude: rescuerLatitude,
-                                          rescuerLongitude: rescuerLongitude,
+                                      InternetConnection(
+                                        child: VictimOnlineStatus(
+                                          child: InOutCalls(
+                                            child: VictimMapPage(
+                                              rescuerLatitude: rescuerLatitude,
+                                              rescuerLongitude:
+                                                  rescuerLongitude,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                       context,
@@ -1084,10 +1106,14 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                 if (!mounted) return;
                                 Navigator.of(context).pop();
                                 pageNavigation(
-                                  InOutCalls(
-                                    child: ChatBot(
-                                      request: label,
-                                      severity: severity,
+                                  InternetConnection(
+                                    child: VictimOnlineStatus(
+                                      child: InOutCalls(
+                                        child: ChatBot(
+                                          request: label,
+                                          severity: severity,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   context,

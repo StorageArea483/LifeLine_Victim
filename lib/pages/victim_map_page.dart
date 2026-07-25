@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -20,8 +19,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:life_line_victim/utils/responsive_helper.dart';
 import 'package:life_line_victim/widgets/global/in_out_calls.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
+import 'package:life_line_victim/widgets/global/victim_online_status.dart';
 
 class VictimMapPage extends ConsumerStatefulWidget {
   final double? rescuerLatitude;
@@ -156,7 +157,12 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
         context,
         AppColors.error,
       );
-      pageNavigation(const InOutCalls(child: LandingPage()), context);
+      pageNavigation(
+        const InternetConnection(
+          child: VictimOnlineStatus(child: InOutCalls(child: LandingPage())),
+        ),
+        context,
+      );
     }
   }
 
@@ -307,7 +313,12 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
         context,
         AppColors.error,
       );
-      pageNavigation(const InOutCalls(child: LandingPage()), context);
+      pageNavigation(
+        const InternetConnection(
+          child: VictimOnlineStatus(child: InOutCalls(child: LandingPage())),
+        ),
+        context,
+      );
     }
   }
 
@@ -367,10 +378,20 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
           _buildRescuerMarker(),
           Consumer(
             builder: (context, ref, child) {
-              return _buildRoutePolyline(ref);
+              final victimLatitude = ref.watch(
+                latLngProvider.select((state) => state.latitude),
+              );
+              final victimLongitude = ref.watch(
+                latLngProvider.select((state) => state.longitude),
+              );
+              return Stack(
+                children: [
+                  _buildRoutePolyline(ref),
+                  _buildCurrentLocationLayer(victimLatitude, victimLongitude),
+                ],
+              );
             },
           ),
-          _buildCurrentLocationLayer(),
         ],
       );
     } catch (e) {
@@ -405,13 +426,40 @@ class _VictimMapPageState extends ConsumerState<VictimMapPage> {
     }
   }
 
-  Widget _buildCurrentLocationLayer() {
-    return const CurrentLocationLayer(
-      style: LocationMarkerStyle(
-        marker: DefaultLocationMarker(color: AppColors.primaryMaroon),
-        markerSize: Size(20, 20),
-        markerDirection: MarkerDirection.heading,
-      ),
+  Widget _buildCurrentLocationLayer(
+    double? victimLatitude,
+    double? victimLongitude,
+  ) {
+    // Only show marker if we have valid coordinates
+    if (victimLatitude == null ||
+        victimLongitude == null ||
+        (victimLatitude == 0.0 && victimLongitude == 0.0)) {
+      return const SizedBox.shrink();
+    }
+
+    return MarkerLayer(
+      markers: [
+        Marker(
+          point: LatLng(victimLatitude, victimLongitude),
+          width: 40,
+          height: 40,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.primaryMaroon,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.person, color: Colors.white, size: 20),
+          ),
+        ),
+      ],
     );
   }
 

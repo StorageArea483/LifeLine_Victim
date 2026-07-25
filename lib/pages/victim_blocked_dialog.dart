@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:life_line_victim/pages/google_signup.dart';
 import 'package:life_line_victim/styles/styles.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
 
@@ -22,7 +23,7 @@ class VictimBlockedDialog extends StatelessWidget {
             .delete();
       }
 
-      pageNavigation(const GoogleSignup(), context);
+      pageNavigation(const InternetConnection(child: GoogleSignup()), context);
     } catch (e) {
       if (context.mounted) {
         pageMessage(

@@ -5,8 +5,10 @@ import 'package:life_line_victim/providers/global_state_providers.dart';
 import 'package:life_line_victim/services/auth_service.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/widgets/global/in_out_calls.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
+import 'package:life_line_victim/widgets/global/victim_online_status.dart';
 
 class GoogleAuthentication extends StatelessWidget {
   final WidgetRef ref;
@@ -58,7 +60,14 @@ class GoogleAuthentication extends StatelessWidget {
 
       if (userCredential != null) {
         if (context.mounted) {
-          pageNavigation(const InOutCalls(child: LandingPage()), context);
+          pageNavigation(
+            const InternetConnection(
+              child: VictimOnlineStatus(
+                child: InOutCalls(child: LandingPage()),
+              ),
+            ),
+            context,
+          );
         }
       }
       if (context.mounted) {

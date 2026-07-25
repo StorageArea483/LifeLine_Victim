@@ -6,9 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line_victim/pages/landing_page.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/utils/responsive_helper.dart';
+import 'package:life_line_victim/widgets/global/in_out_calls.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
 import 'dart:async';
+
+import 'package:life_line_victim/widgets/global/victim_online_status.dart';
 
 class VictimWaitingScreen extends ConsumerStatefulWidget {
   final String requestType;
@@ -159,7 +163,14 @@ class _VictimWaitingState extends ConsumerState<VictimWaitingScreen> {
                   if (!mounted) return;
                   try {
                     await _removeUserRequest();
-                    pageNavigation(const LandingPage(), context);
+                    pageNavigation(
+                      const InternetConnection(
+                        child: VictimOnlineStatus(
+                          child: InOutCalls(child: LandingPage()),
+                        ),
+                      ),
+                      context,
+                    );
                   } catch (e) {
                     if (mounted) {
                       pageMessage(

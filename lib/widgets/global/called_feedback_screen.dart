@@ -4,7 +4,9 @@ import 'package:life_line_victim/pages/landing_page.dart';
 import 'package:life_line_victim/providers/call_state_provider.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/widgets/global/in_out_calls.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
+import 'package:life_line_victim/widgets/global/victim_online_status.dart';
 
 class CallFeedbackScreen extends ConsumerWidget {
   final String title;
@@ -50,7 +52,14 @@ class CallFeedbackScreen extends ConsumerWidget {
               ),
               onPressed: () {
                 ref.read(currentCallIdProvider.notifier).state = null;
-                pageNavigation(const InOutCalls(child: LandingPage()), context);
+                pageNavigation(
+                  const InternetConnection(
+                    child: VictimOnlineStatus(
+                      child: InOutCalls(child: LandingPage()),
+                    ),
+                  ),
+                  context,
+                );
               },
               child: const Text(
                 "Go Home",

@@ -5,7 +5,9 @@ import 'package:life_line_victim/pages/victim_contact_page.dart';
 import 'package:life_line_victim/pages/victim_map_page.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/widgets/global/in_out_calls.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
+import 'package:life_line_victim/widgets/global/victim_online_status.dart';
 
 class BottomNavbar extends StatelessWidget {
   final int currentIndex;
@@ -20,16 +22,41 @@ class BottomNavbar extends StatelessWidget {
         if (index == currentIndex) {
           return;
         } else if (index == 0 && context.mounted) {
-          pageNavigation(const InOutCalls(child: LandingPage()), context);
+          pageNavigation(
+            const InternetConnection(
+              child: VictimOnlineStatus(
+                child: InOutCalls(child: LandingPage()),
+              ),
+            ),
+            context,
+          );
         } else if (index == 1 && context.mounted) {
-          pageNavigation(const InOutCalls(child: VictimMapPage()), context);
+          pageNavigation(
+            const InternetConnection(
+              child: VictimOnlineStatus(
+                child: InOutCalls(child: VictimMapPage()),
+              ),
+            ),
+            context,
+          );
         } else if (index == 2 && context.mounted) {
           pageNavigation(
-            const InOutCalls(child: ChatBot(request: 'medical')),
+            const InternetConnection(
+              child: VictimOnlineStatus(
+                child: InOutCalls(child: ChatBot(request: 'medical')),
+              ),
+            ),
             context,
           );
         } else if (index == 3 && context.mounted) {
-          pageNavigation(const InOutCalls(child: VictimContactPage()), context);
+          pageNavigation(
+            const InternetConnection(
+              child: VictimOnlineStatus(
+                child: InOutCalls(child: VictimContactPage()),
+              ),
+            ),
+            context,
+          );
         }
       },
       type: BottomNavigationBarType.fixed,

@@ -1,0 +1,34 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:life_line_victim/pages/offline_connectivity.dart';
+import 'package:life_line_victim/providers/internet_provider.dart';
+
+class InternetConnection extends ConsumerWidget {
+  final Widget child;
+
+  const InternetConnection({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!context.mounted) return const SizedBox.shrink();
+    final connectionState = ref.watch(internetProvider);
+
+    return connectionState.when(
+      skipLoadingOnRefresh: false,
+      skipLoadingOnReload: false,
+      data: (connectivityResult) {
+        final hasInternet =
+            !connectivityResult.contains(ConnectivityResult.none);
+
+        if (hasInternet) {
+          return child;
+        } else {
+          return Stack(children: [child, const OfflineConnectivity()]);
+        }
+      },
+      loading: () => child,
+      error: (_, _) => Stack(children: [child, const OfflineConnectivity()]),
+    );
+  }
+}

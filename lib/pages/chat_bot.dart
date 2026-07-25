@@ -6,9 +6,11 @@ import 'package:life_line_victim/pages/landing_page.dart';
 import 'package:life_line_victim/pages/ngo_connect.dart';
 import 'package:life_line_victim/widgets/global/bottom_navbar.dart';
 import 'package:life_line_victim/widgets/global/in_out_calls.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/page_loading.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
+import 'package:life_line_victim/widgets/global/victim_online_status.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:life_line_victim/config/grok_client.dart';
@@ -41,14 +43,20 @@ class _ChatBotState extends ConsumerState<ChatBot> {
   @override
   void initState() {
     super.initState();
-    _initializeSpeech();
+    _initializeChatBotPage();
+  }
+
+  Future<void> _initializeChatBotPage() async {
+    await _initializeSpeech();
+
+    if (!mounted) return;
+
     _conversationHistory.add({
       'role': 'system',
       'content': GrokClient.systemPrompt,
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _sendInitialMessage();
-    });
+
+    _sendInitialMessage();
   }
 
   Future<void> _initializeSpeech() async {
@@ -392,7 +400,14 @@ class _ChatBotState extends ConsumerState<ChatBot> {
             color: AppColors.textPrimary,
           ),
           onPressed: () {
-            pageNavigation(const InOutCalls(child: LandingPage()), context);
+            pageNavigation(
+              const InternetConnection(
+                child: VictimOnlineStatus(
+                  child: InOutCalls(child: LandingPage()),
+                ),
+              ),
+              context,
+            );
           },
         ),
         actions: [

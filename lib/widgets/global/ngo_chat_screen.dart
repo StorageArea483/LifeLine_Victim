@@ -5,19 +5,28 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_line_victim/pages/landing_page.dart';
+import 'package:life_line_victim/pages/sos_alternative.dart';
 import 'package:life_line_victim/pages/victim_contact_page.dart';
 import 'package:life_line_victim/providers/ngo_chat_provider.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/utils/responsive_helper.dart';
 import 'package:life_line_victim/widgets/global/in_out_calls.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
+import 'package:life_line_victim/widgets/global/victim_online_status.dart';
 
 class NgoChatScreen extends ConsumerStatefulWidget {
   final String ngoId;
   final String ngoName;
+  final bool isSosAlternative;
 
-  const NgoChatScreen({super.key, required this.ngoId, required this.ngoName});
+  const NgoChatScreen({
+    super.key,
+    required this.ngoId,
+    required this.ngoName,
+    required this.isSosAlternative,
+  });
 
   @override
   ConsumerState<NgoChatScreen> createState() => _NgoChatScreenState();
@@ -45,8 +54,8 @@ class _NgoChatScreenState extends ConsumerState<NgoChatScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeChat();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _initializeChat();
     });
   }
 
@@ -88,7 +97,14 @@ class _NgoChatScreenState extends ConsumerState<NgoChatScreen> {
             context,
             AppColors.error,
           );
-          pageNavigation(const InOutCalls(child: LandingPage()), context);
+          pageNavigation(
+            const InternetConnection(
+              child: VictimOnlineStatus(
+                child: InOutCalls(child: LandingPage()),
+              ),
+            ),
+            context,
+          );
         }
         return;
       }
@@ -113,7 +129,12 @@ class _NgoChatScreenState extends ConsumerState<NgoChatScreen> {
           context,
           AppColors.error,
         );
-        pageNavigation(const InOutCalls(child: LandingPage()), context);
+        pageNavigation(
+          const InternetConnection(
+            child: VictimOnlineStatus(child: InOutCalls(child: LandingPage())),
+          ),
+          context,
+        );
       }
     }
   }
@@ -153,7 +174,12 @@ class _NgoChatScreenState extends ConsumerState<NgoChatScreen> {
           context,
           AppColors.error,
         );
-        pageNavigation(const InOutCalls(child: LandingPage()), context);
+        pageNavigation(
+          const InternetConnection(
+            child: VictimOnlineStatus(child: InOutCalls(child: LandingPage())),
+          ),
+          context,
+        );
       }
     }
   }
@@ -307,11 +333,27 @@ class _NgoChatScreenState extends ConsumerState<NgoChatScreen> {
               size: ResponsiveHelper.iconSize(context),
               color: AppColors.textPrimary,
             ),
-            onPressed:
-                () => pageNavigation(
-                  const InOutCalls(child: VictimContactPage()),
+            onPressed: () {
+              if (!widget.isSosAlternative) {
+                pageNavigation(
+                  const InternetConnection(
+                    child: VictimOnlineStatus(
+                      child: InOutCalls(child: VictimContactPage()),
+                    ),
+                  ),
                   context,
-                ),
+                );
+              } else {
+                pageNavigation(
+                  const InternetConnection(
+                    child: VictimOnlineStatus(
+                      child: InOutCalls(child: SosAlternative()),
+                    ),
+                  ),
+                  context,
+                );
+              }
+            },
           ),
           _buildNgoLogo(widget.ngoName),
           SizedBox(width: ResponsiveHelper.isTablet(context) ? 16 : 12),

@@ -10,9 +10,12 @@ import 'package:life_line_victim/providers/victim_chat_provider.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/utils/responsive_helper.dart';
 import 'package:life_line_victim/widgets/global/in_out_calls.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
 import 'dart:io' show Platform;
+
+import 'package:life_line_victim/widgets/global/victim_online_status.dart';
 
 class VictimChatScreen extends ConsumerStatefulWidget {
   final String rescuerId;
@@ -61,8 +64,8 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeChat();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _initializeChat();
     });
   }
 
@@ -105,7 +108,14 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
             context,
             AppColors.error,
           );
-          pageNavigation(const InOutCalls(child: LandingPage()), context);
+          pageNavigation(
+            const InternetConnection(
+              child: VictimOnlineStatus(
+                child: InOutCalls(child: LandingPage()),
+              ),
+            ),
+            context,
+          );
         }
         return;
       }
@@ -131,7 +141,12 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
           context,
           AppColors.error,
         );
-        pageNavigation(const InOutCalls(child: LandingPage()), context);
+        pageNavigation(
+          const InternetConnection(
+            child: VictimOnlineStatus(child: InOutCalls(child: LandingPage())),
+          ),
+          context,
+        );
       }
     }
   }
@@ -361,7 +376,11 @@ class _VictimChatScreenState extends ConsumerState<VictimChatScreen> {
             ),
             onPressed:
                 () => pageNavigation(
-                  const InOutCalls(child: VictimContactPage()),
+                  const InternetConnection(
+                    child: VictimOnlineStatus(
+                      child: InOutCalls(child: VictimContactPage()),
+                    ),
+                  ),
                   context,
                 ),
           ),

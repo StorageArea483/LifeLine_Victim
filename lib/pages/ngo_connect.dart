@@ -9,10 +9,12 @@ import 'package:life_line_victim/providers/lat_lng_provider.dart';
 import 'package:life_line_victim/styles/styles.dart';
 import 'package:life_line_victim/providers/sos_alt_provider.dart';
 import 'package:life_line_victim/utils/responsive_helper.dart';
+import 'package:life_line_victim/widgets/global/internet_connection.dart';
 import 'package:life_line_victim/widgets/global/page_message.dart';
 import 'dart:async';
 
 import 'package:life_line_victim/widgets/global/page_navigation.dart';
+import 'package:life_line_victim/widgets/global/victim_online_status.dart';
 
 class NgoConnectSheet {
   static void show(
@@ -407,8 +409,12 @@ class _NgoConnectState extends ConsumerState<NgoConnect> {
                             try {
                               await _createUserRequest(ngoId);
                               pageNavigation(
-                                VictimWaitingScreen(
-                                  requestType: widget.requestType ?? 'N/A',
+                                InternetConnection(
+                                  child: VictimOnlineStatus(
+                                    child: VictimWaitingScreen(
+                                      requestType: widget.requestType ?? 'N/A',
+                                    ),
+                                  ),
                                 ),
                                 context,
                               );
