@@ -43,4 +43,4 @@ final appRouterProvider = Provider<AppRoute>((ref) {
   return AppRoute.home;
 });
 
-final requestTypeProvider = StateProvider.autoDispose<String>((ref) => '');
+final requestTypeProvider = StateProvider<String>((ref) => '');
