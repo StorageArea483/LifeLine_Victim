@@ -85,11 +85,6 @@ class BottomNavbar extends StatelessWidget {
           activeIcon: Icon(Icons.chat_bubble),
           label: 'Chat',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: 'Profile',
-        ),
       ],
     );
   }
