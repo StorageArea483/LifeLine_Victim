@@ -1,4 +1,4 @@
-# LifeLine -- Victim Mobile Application
+# LifeLine - Victim Mobile Application
 
 ## 📌 Project Information
 
