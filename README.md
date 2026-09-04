@@ -559,8 +559,6 @@ emergency services whenever possible.
 
 ------------------------------------------------------------------------
 
-# 👨‍💻 Developers
-
 **Daniyal Mushtaq**\
 BS Computer Science --- COMSATS University Islamabad, Abbottabad Campus
 
@@ -573,12 +571,12 @@ BS Computer Science --- COMSATS University Islamabad, Abbottabad Campus
 
 # 🎓 Final Year Project
 
-**LifeLine -- A Disaster Relief & Emergency Response App**
+**LifeLine - A Disaster Relief & Emergency Response App**
 
 Bachelor of Science in Computer Science\
 COMSATS University Islamabad, Abbottabad Campus\
-Academic Session **2022--2026**\
-**Final Year Project -- Spring 2026**
+Academic Session **2022 - 2026**\
+**Final Year Project -  Spring 2026**
 
 ------------------------------------------------------------------------
 
