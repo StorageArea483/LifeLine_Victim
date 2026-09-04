@@ -1,22 +1,5 @@
 # LifeLine -- Victim Mobile Application
 
-```{=html}
-<p align="center">
-```
-`<strong>`{=html}A Disaster Relief & Emergency Response
-App`</strong>`{=html}`<br>`{=html} Victim-side mobile application for
-requesting emergency assistance, sharing location, receiving safety
-guidance, and communicating with responders.
-```{=html}
-</p>
-```
-```{=html}
-<p align="center">
-```
-`<img src="assets/images/app_bg_removed.webp" alt="LifeLine App" width="140">`{=html}
-```{=html}
-</p>
-```
 ## 📌 Project Information
 
   Item               Details
