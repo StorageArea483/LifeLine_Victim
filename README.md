@@ -1,23 +1,5 @@
 # LifeLine - Victim Mobile Application
 
-## 📌 Project Information
-
-  Item               Details
-  ------------------ --------------------------------------------------------
-  **Project**        LifeLine -- A Disaster Relief & Emergency Response App
-  **Module**         LifeLine -- Mobile App for Victims
-  **Project Type**   Final Year Project (FYP) -- Spring 2026
-  **University**     COMSATS University Islamabad, Abbottabad Campus
-  **Department**     Department of Computer Science
-  **Degree**         Bachelor of Science in Computer Science (2022--2026)
-  **Developers**     Daniyal Mushtaq & Aryan Sajid
-  **Supervisor**     Ms. Aatikah Rasool
-  **Platform**       Android & iOS
-  **Framework**      Flutter
-  **Language**       Dart
-
-------------------------------------------------------------------------
-
 ## 🚨 About LifeLine
 
 LifeLine is a disaster relief and emergency response system designed to
